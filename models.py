@@ -30,7 +30,7 @@ class User(UserMixin, db.Model):
     
     # Common fields
     password_hash = db.Column(db.String(256), nullable=False)
-    user_type = db.Column(db.String(20), nullable=False, default='elderly')  # elderly, organizer, volunteer
+    user_type = db.Column(db.String(20), nullable=False, default='elderly')  # elderly, organizer, volunteer, admin
     profile_picture = db.Column(db.String(255), nullable=True)  # Path to profile picture
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

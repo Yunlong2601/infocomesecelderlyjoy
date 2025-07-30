@@ -38,6 +38,8 @@ def profile():
         return render_template('profile.html', events=events, user_type='elderly')
     elif current_user.user_type == 'organizer':
         return redirect(url_for('organizer.dashboard'))
+    elif current_user.user_type == 'admin':
+        return redirect(url_for('admin.dashboard'))
     else:  # volunteer
         applications = VolunteerApplication.query.filter_by(volunteer_id=current_user.id).all()
         return render_template('profile.html', applications=applications, user_type='volunteer')
@@ -968,6 +970,209 @@ def delete_picture():
         flash('No profile picture to delete.', 'warning')
     
     return redirect(url_for('volunteer.profile'))
+
+# Admin Blueprint - Database Management
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """Admin dashboard with database management"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get database statistics
+    total_users = User.query.count()
+    elderly_users = User.query.filter_by(user_type='elderly').count()
+    organizers = User.query.filter_by(user_type='organizer').count()
+    volunteers = User.query.filter_by(user_type='volunteer').count()
+    admins = User.query.filter_by(user_type='admin').count()
+    
+    total_events = Event.query.count()
+    pending_events = Event.query.filter_by(status='pending').count()
+    approved_events = Event.query.filter_by(status='approved').count()
+    rejected_events = Event.query.filter_by(status='rejected').count()
+    
+    total_rsvps = EventRSVP.query.count()
+    total_volunteer_apps = VolunteerApplication.query.count()
+    pending_volunteer_apps = VolunteerApplication.query.filter_by(status='pending').count()
+    
+    # Recent activities
+    recent_users = User.query.order_by(User.id.desc()).limit(5).all()
+    recent_events = Event.query.order_by(Event.created_at.desc()).limit(5).all()
+    pending_events_list = Event.query.filter_by(status='pending').order_by(Event.created_at.desc()).limit(10).all()
+    
+    return render_template('admin/dashboard.html',
+                         total_users=total_users,
+                         elderly_users=elderly_users,
+                         organizers=organizers,
+                         volunteers=volunteers,
+                         admins=admins,
+                         total_events=total_events,
+                         pending_events=pending_events,
+                         approved_events=approved_events,
+                         rejected_events=rejected_events,
+                         total_rsvps=total_rsvps,
+                         total_volunteer_apps=total_volunteer_apps,
+                         pending_volunteer_apps=pending_volunteer_apps,
+                         recent_users=recent_users,
+                         recent_events=recent_events,
+                         pending_events_list=pending_events_list)
+
+@admin_bp.route('/users')
+@login_required
+def users():
+    """Admin user management"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    user_type_filter = request.args.get('type', 'all')
+    search = request.args.get('search', '')
+    
+    query = User.query
+    
+    if user_type_filter != 'all':
+        query = query.filter_by(user_type=user_type_filter)
+    
+    if search:
+        query = query.filter(
+            db.or_(
+                User.first_name.contains(search),
+                User.last_name.contains(search),
+                User.full_name.contains(search),
+                User.email.contains(search),
+                User.nric.contains(search)
+            )
+        )
+    
+    users = query.order_by(User.id.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/users.html', users=users, 
+                         user_type_filter=user_type_filter, search=search)
+
+@admin_bp.route('/events')
+@login_required
+def events():
+    """Admin event management"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', 'all')
+    search = request.args.get('search', '')
+    
+    query = Event.query
+    
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    if search:
+        query = query.filter(
+            db.or_(
+                Event.title.contains(search),
+                Event.description.contains(search),
+                Event.location.contains(search)
+            )
+        )
+    
+    events = query.order_by(Event.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/events.html', events=events,
+                         status_filter=status_filter, search=search)
+
+@admin_bp.route('/event/<int:event_id>/approve', methods=['POST'])
+@login_required
+def approve_event(event_id):
+    """Approve an event"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    event = Event.query.get_or_404(event_id)
+    event.status = 'approved'
+    db.session.commit()
+    
+    flash(f'Event "{event.title}" has been approved.', 'success')
+    return redirect(request.referrer or url_for('admin.events'))
+
+@admin_bp.route('/event/<int:event_id>/reject', methods=['POST'])
+@login_required
+def reject_event(event_id):
+    """Reject an event"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    event = Event.query.get_or_404(event_id)
+    event.status = 'rejected'
+    db.session.commit()
+    
+    flash(f'Event "{event.title}" has been rejected.', 'success')
+    return redirect(request.referrer or url_for('admin.events'))
+
+@admin_bp.route('/user/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
+def toggle_user_status(user_id):
+    """Toggle user active status"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    user = User.query.get_or_404(user_id)
+    if user.user_type == 'admin' and user.id != current_user.id:
+        flash('Cannot modify other admin accounts.', 'danger')
+        return redirect(request.referrer or url_for('admin.users'))
+    
+    # Toggle active status (assuming we add this field)
+    user.is_active = not getattr(user, 'is_active', True)
+    db.session.commit()
+    
+    status = 'activated' if getattr(user, 'is_active', True) else 'deactivated'
+    flash(f'User {user.get_full_name()} has been {status}.', 'success')
+    return redirect(request.referrer or url_for('admin.users'))
+
+@admin_bp.route('/create-admin', methods=['GET', 'POST'])
+@login_required
+def create_admin():
+    """Create new admin account"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    form = EditProfileForm()
+    
+    if form.validate_on_submit():
+        # Check if email already exists
+        if User.query.filter_by(email=form.email.data).first():
+            flash('Email already registered.', 'danger')
+            return render_template('admin/create_admin.html', form=form)
+        
+        # Create admin user
+        admin_user = User(
+            username=form.email.data,
+            email=form.email.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            phone=form.phone.data,
+            user_type='admin'
+        )
+        admin_user.set_password('admin123')  # Default password
+        
+        db.session.add(admin_user)
+        db.session.commit()
+        
+        flash(f'Admin account created for {admin_user.get_full_name()}. Default password: admin123', 'success')
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/create_admin.html', form=form)
 
 @organizer_bp.route('/create-event', methods=['GET', 'POST'])
 @login_required

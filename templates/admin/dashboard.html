@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-shield-alt text-danger me-2"></i>Admin Dashboard</h2>
+                    <p class="text-muted mb-0">Database Management & System Overview</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.create_admin') }}" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-user-shield me-2"></i>Create Admin
+                    </a>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">
+                        <i class="fas fa-users me-2"></i>Manage Users
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_users }}</h4>
+                                    <p class="mb-0">Total Users</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_events }}</h4>
+                                    <p class="mb-0">Total Events</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-calendar-alt fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ pending_events }}</h4>
+                                    <p class="mb-0">Pending Events</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_rsvps }}</h4>
+                                    <p class="mb-0">Total RSVPs</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-bar me-2"></i>User Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <h3 class="text-primary">{{ elderly_users }}</h3>
+                                    <p class="text-muted">Elderly Users</p>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h3 class="text-success">{{ organizers }}</h3>
+                                    <p class="text-muted">Organizers</p>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h3 class="text-info">{{ volunteers }}</h3>
+                                    <p class="text-muted">Volunteers</p>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <h3 class="text-danger">{{ admins }}</h3>
+                                    <p class="text-muted">Administrators</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Events for Approval -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-hourglass-half me-2"></i>Pending Event Approvals</h5>
+                            <a href="{{ url_for('admin.events', status='pending') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if pending_events_list %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Event</th>
+                                                <th>Organizer</th>
+                                                <th>Date</th>
+                                                <th>Category</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for event in pending_events_list %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ event.title }}</strong><br>
+                                                        <small class="text-muted">{{ event.location }}</small>
+                                                    </td>
+                                                    <td>{{ event.organizer.get_full_name() }}</td>
+                                                    <td>{{ event.date.strftime('%b %d, %Y') }}</td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">{{ event.category.title() }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-success me-1">
+                                                                <i class="fas fa-check"></i> Approve
+                                                            </button>
+                                                        </form>
+                                                        <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}" class="d-inline">
+                                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                                <i class="fas fa-times"></i> Reject
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center py-4">No pending events for approval.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-user-plus me-2"></i>Recent Users</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_users %}
+                                {% for user in recent_users %}
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="flex-shrink-0">
+                                            {% if user.profile_picture %}
+                                                <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                     alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0">{{ user.get_full_name() }}</h6>
+                                            <small class="text-muted">
+                                                {{ user.user_type.title() }} • {{ user.created_at.strftime('%b %d') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent users.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-calendar-plus me-2"></i>Recent Events</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_events %}
+                                {% for event in recent_events %}
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-calendar"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0">{{ event.title }}</h6>
+                                            <small class="text-muted">
+                                                <span class="badge bg-{{ 'success' if event.status == 'approved' else 'warning' if event.status == 'pending' else 'danger' }}">
+                                                    {{ event.status.title() }}
+                                                </span>
+                                                • {{ event.created_at.strftime('%b %d') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent events.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

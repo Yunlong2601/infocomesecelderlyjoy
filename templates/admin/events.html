@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Event Management - Community Connect Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-calendar-alt text-success me-2"></i>Event Management</h2>
+                    <p class="text-muted mb-0">Approve, reject, and manage all platform events</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="all" {{ 'selected' if status_filter == 'all' else '' }}>All Events</option>
+                                <option value="pending" {{ 'selected' if status_filter == 'pending' else '' }}>Pending</option>
+                                <option value="approved" {{ 'selected' if status_filter == 'approved' else '' }}>Approved</option>
+                                <option value="rejected" {{ 'selected' if status_filter == 'rejected' else '' }}>Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   placeholder="Search by title, description, or location..." value="{{ search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-table me-2"></i>Events ({{ events.total }} total)</h5>
+                </div>
+                <div class="card-body">
+                    {% if events.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Event</th>
+                                        <th>Organizer</th>
+                                        <th>Date & Time</th>
+                                        <th>Participants</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in events.items %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ event.title }}</strong><br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}<br>
+                                                        <span class="badge bg-secondary">{{ event.category.title() }}</span>
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 me-2">
+                                                        {% if event.organizer.profile_picture %}
+                                                            <img src="{{ url_for('static', filename=event.organizer.profile_picture) }}" 
+                                                                 alt="Profile" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;">
+                                                        {% else %}
+                                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" 
+                                                                 style="width: 30px; height: 30px;">
+                                                                <i class="fas fa-user text-muted" style="font-size: 0.8rem;"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        {{ event.organizer.get_full_name() }}<br>
+                                                        <small class="text-muted">{{ event.organizer.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong>{{ event.date.strftime('%b %d, %Y') }}</strong><br>
+                                                <small class="text-muted">
+                                                    {{ event.date.strftime('%I:%M %p') }}<br>
+                                                    Duration: {{ event.duration_hours }}h
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="text-center">
+                                                    <strong>{{ event.rsvps|length }}</strong>
+                                                    {% if event.max_participants %}
+                                                        / {{ event.max_participants }}
+                                                    {% endif %}
+                                                    <br>
+                                                    <small class="text-muted">registered</small>
+                                                    {% if event.volunteers_needed > 0 %}
+                                                        <br><small class="text-info">{{ event.volunteer_applications|length }}/{{ event.volunteers_needed }} volunteers</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if event.status == 'approved' else 'warning' if event.status == 'pending' else 'danger' }} fs-6">
+                                                    {{ event.status.title() }}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">{{ event.created_at.strftime('%b %d') }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group-vertical btn-group-sm">
+                                                    {% if event.status == 'pending' %}
+                                                        <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}" class="mb-1">
+                                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                                <i class="fas fa-check me-1"></i>Approve
+                                                            </button>
+                                                        </form>
+                                                        <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}">
+                                                            <button type="submit" class="btn btn-danger btn-sm w-100">
+                                                                <i class="fas fa-times me-1"></i>Reject
+                                                            </button>
+                                                        </form>
+                                                    {% elif event.status == 'rejected' %}
+                                                        <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}">
+                                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                                <i class="fas fa-check me-1"></i>Approve
+                                                            </button>
+                                                        </form>
+                                                    {% else %}
+                                                        <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                                                <i class="fas fa-times me-1"></i>Reject
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if events.pages > 1 %}
+                            <nav aria-label="Event pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if events.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.events', page=events.prev_num, status=status_filter, search=search) }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in events.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != events.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.events', page=page_num, status=status_filter, search=search) }}">{{ page_num }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if events.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.events', page=events.next_num, status=status_filter, search=search) }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No events found</h5>
+                            <p class="text-muted">Try adjusting your search criteria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
