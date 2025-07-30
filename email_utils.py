@@ -5,8 +5,6 @@ from datetime import datetime
 
 def send_verification_email(email, verification_code, purpose='login'):
     """Send verification email with the 6-digit code"""
-    # For school project - send all emails to the designated test email
-    recipient_email = 'samplebookshopnyp@gmail.com'
     try:
         subject_map = {
             'login': 'Community Connect - Login Verification Code',
@@ -90,20 +88,18 @@ def send_verification_email(email, verification_code, purpose='login'):
         
         msg = Message(
             subject=subject,
-            recipients=['samplebookshopnyp@gmail.com'],  # School project - all emails go here
+            recipients=[email],
             html=html_body,
             body=text_body
         )
         
         mail.send(msg)
-        logging.info(f"Verification email sent to {recipient_email} (for user {email}) for {purpose}")
+        logging.info(f"Verification email sent to {email} for {purpose}")
         return True
         
     except Exception as e:
         logging.error(f"Failed to send verification email to {email}: {str(e)}")
-        # For school project - still return True so login can continue
-        logging.info(f"Email sending failed but continuing login process for school project")
-        return True
+        return False
 
 def send_login_success_notification(email, user_name):
     """Send notification email when user successfully logs in"""
