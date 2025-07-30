@@ -4,6 +4,8 @@ import string
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import text
+from encryption_manager import encryption_manager
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -49,6 +51,54 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def encrypt_sensitive_data(self):
+        """Encrypt sensitive user data using AES-256"""
+        if self.nric:
+            self.nric = encryption_manager.encrypt_data(self.nric)
+        if self.security_a1:
+            self.security_a1 = encryption_manager.encrypt_data(self.security_a1)
+        if self.security_a2:
+            self.security_a2 = encryption_manager.encrypt_data(self.security_a2)
+        if self.security_a3:
+            self.security_a3 = encryption_manager.encrypt_data(self.security_a3)
+        if self.phone:
+            self.phone = encryption_manager.encrypt_data(self.phone)
+    
+    def decrypt_sensitive_data(self):
+        """Decrypt sensitive user data"""
+        decrypted_data = {}
+        try:
+            if self.nric:
+                decrypted_data['nric'] = encryption_manager.decrypt_data(self.nric)
+            if self.security_a1:
+                decrypted_data['security_a1'] = encryption_manager.decrypt_data(self.security_a1)
+            if self.security_a2:
+                decrypted_data['security_a2'] = encryption_manager.decrypt_data(self.security_a2)
+            if self.security_a3:
+                decrypted_data['security_a3'] = encryption_manager.decrypt_data(self.security_a3)
+            if self.phone:
+                decrypted_data['phone'] = encryption_manager.decrypt_data(self.phone)
+        except Exception:
+            # Data might not be encrypted yet
+            decrypted_data = {
+                'nric': self.nric,
+                'security_a1': self.security_a1,
+                'security_a2': self.security_a2,
+                'security_a3': self.security_a3,
+                'phone': self.phone
+            }
+        return decrypted_data
+    
+    @classmethod
+    def safe_query_by_nric(cls, nric_value):
+        """Safely query user by NRIC using ORM parameterized queries"""
+        return cls.query.filter(cls.nric == nric_value).first()
+    
+    @classmethod
+    def safe_query_by_email(cls, email_value):
+        """Safely query user by email using ORM parameterized queries"""
+        return cls.query.filter(cls.email == email_value).first()
 
     def get_full_name(self):
         if self.user_type == 'elderly':

@@ -83,6 +83,32 @@ login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 login_manager.session_protection = "strong"  # Enhanced session protection
 
+# Session management middleware
+@app.before_request
+def before_request():
+    """Session validation middleware"""
+    from session_manager import session_manager
+    from flask import session, request, redirect, url_for, flash
+    
+    # Skip session validation for static files and auth routes
+    if request.endpoint and (
+        request.endpoint.startswith('static') or 
+        request.endpoint.startswith('auth.login') or
+        request.endpoint.startswith('auth.register') or
+        request.endpoint == 'main.index'
+    ):
+        return
+    
+    # Validate session for authenticated users
+    if 'user_id' in session:
+        is_valid, message = session_manager.validate_session()
+        if not is_valid:
+            flash(f'Session error: {message}', 'warning')
+            return redirect(url_for('auth.login'))
+        
+        # Perform periodic session cleanup
+        session_manager.cleanup_expired_sessions()
+
 @login_manager.user_loader
 def load_user(user_id):
     from models import User

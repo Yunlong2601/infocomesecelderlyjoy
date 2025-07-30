@@ -21,6 +21,8 @@ from security_enhancements import (
     SSRFPrevention, DataIntegrityValidation, SecurityMonitoring
 )
 from security_validator import OWASPSecurityValidator
+from session_manager import session_manager
+from encryption_manager import encryption_manager
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -82,13 +84,13 @@ def login():
             flash('Too many login attempts. Please try again in 15 minutes.', 'danger')
             return render_template('auth/login.html', form=form)
         
-        # Check if it's an email (contains @) or NRIC/username
+        # Check if it's an email (contains @) or NRIC/username using secure ORM queries
         if '@' in login_identifier:
-            # Email login - find user by email
-            user = User.query.filter_by(email=login_identifier).first()
+            # Email login - use secure ORM query
+            user = User.safe_query_by_email(login_identifier)
         else:
-            # NRIC/username login - try NRIC first (elderly), then username (organizers/volunteers)
-            user = User.query.filter_by(nric=login_identifier).first()
+            # NRIC/username login - use secure ORM queries
+            user = User.safe_query_by_nric(login_identifier)
             if not user:
                 user = User.query.filter_by(username=login_identifier).first()
         
@@ -101,7 +103,8 @@ def login():
         
         if user and user.check_password(form.password.data):
             if user.user_type == 'elderly':
-                # For elderly users, use 2FA with security questions
+                # Initialize secure session for elderly users
+                session_manager.initialize_session(user.id)
                 session['pending_user_id'] = user.id
                 return redirect(url_for('auth.two_factor'))
             else:
@@ -194,8 +197,9 @@ def two_factor():
         correct_answer = session.get('correct_answer', '').lower().strip() if session.get('correct_answer') else ''
         
         if user_answer == correct_answer:
-            # 2FA successful - log in the user
+            # 2FA successful - log in the user with secure session
             login_user(user)
+            session_manager.initialize_session(user.id)
             welcome_name = user.get_full_name()
             
             # Log successful authentication (Security Monitoring)
