@@ -16,6 +16,11 @@ from access_control import (
     check_application_ownership, sanitize_user_input, validate_file_upload,
     log_security_event
 )
+from security_enhancements import (
+    CryptographicSecurity, SQLInjectionPrevention, AuthenticationSecurity,
+    SSRFPrevention, DataIntegrityValidation, SecurityMonitoring
+)
+from security_validator import OWASPSecurityValidator
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -62,7 +67,20 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        login_identifier = form.nric.data.strip()
+        login_identifier = sanitize_user_input(form.nric.data.strip(), 100)
+        
+        # Comprehensive authentication validation (OWASP #7)
+        auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
+            login_identifier, request.remote_addr
+        )
+        if not auth_valid:
+            OWASPSecurityValidator.log_security_event(
+                'RATE_LIMIT_EXCEEDED', 
+                f'Login rate limit exceeded for {login_identifier}',
+                severity='WARNING'
+            )
+            flash('Too many login attempts. Please try again in 15 minutes.', 'danger')
+            return render_template('auth/login.html', form=form)
         
         # Check if it's an email (contains @) or NRIC/username
         if '@' in login_identifier:
@@ -73,6 +91,13 @@ def login():
             user = User.query.filter_by(nric=login_identifier).first()
             if not user:
                 user = User.query.filter_by(username=login_identifier).first()
+        
+        # Validate session security (OWASP #2 Cryptographic Failures)
+        session_valid, session_message = OWASPSecurityValidator.validate_session_security()
+        if not session_valid:
+            session.clear()
+            flash('Session expired. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
         
         if user and user.check_password(form.password.data):
             if user.user_type == 'elderly':
@@ -96,6 +121,12 @@ def login():
                 else:
                     flash('Failed to send verification email. Please try again.', 'danger')
         else:
+            # Log failed login attempt (Logging and Monitoring)
+            SecurityMonitoring.log_security_event(
+                'FAILED_LOGIN',
+                f'Failed login attempt for {login_identifier}',
+                ip_address=request.remote_addr
+            )
             flash('Invalid email/NRIC or password. Please try again.', 'danger')
     
     return render_template('auth/login.html', form=form)
@@ -166,6 +197,15 @@ def two_factor():
             # 2FA successful - log in the user
             login_user(user)
             welcome_name = user.get_full_name()
+            
+            # Log successful authentication (Security Monitoring)
+            SecurityMonitoring.log_security_event(
+                'SUCCESSFUL_LOGIN',
+                f'User {user.id} completed 2FA authentication',
+                user_id=user.id,
+                ip_address=request.remote_addr
+            )
+            
             flash(f'Welcome back, {welcome_name}! Security verification successful.', 'success')
             
             # Clear session data
@@ -177,6 +217,13 @@ def two_factor():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
         else:
+            # Log failed 2FA attempt
+            SecurityMonitoring.log_security_event(
+                'FAILED_2FA',
+                f'Failed 2FA attempt for user {user.id}',
+                user_id=user.id,
+                ip_address=request.remote_addr
+            )
             flash('Incorrect answer. Please try again.', 'danger')
     
     return render_template('auth/two_factor.html', form=form, question=question_text, user_name=user.get_full_name())
@@ -202,6 +249,12 @@ def register():
             
             if not form.full_name.data or not form.full_name.data.strip():
                 form.full_name.errors.append('Full name is required for elderly users.')
+            
+            # Additional security validation for elderly registration (OWASP #3 Injection)
+            if form.full_name.data:
+                sanitized_name = OWASPSecurityValidator.sanitize_sql_input(form.full_name.data)
+                if sanitized_name != form.full_name.data:
+                    form.full_name.errors.append('Invalid characters detected in name.')
             
             if not form.language_preference.data:
                 form.language_preference.errors.append('Language preference is required for elderly users.')

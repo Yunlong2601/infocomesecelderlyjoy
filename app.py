@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from datetime import timedelta
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -8,8 +9,15 @@ from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure enhanced security logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
 
 class Base(DeclarativeBase):
     pass
@@ -20,14 +28,42 @@ mail = Mail()
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+
+# Enhanced security configuration
+app.secret_key = os.environ.get("SESSION_SECRET")
+if not app.secret_key:
+    raise ValueError("SESSION_SECRET environment variable must be set for security")
+
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure the database
+# Comprehensive security configuration
+app.config.update(
+    # Session security (Cryptographic Failures protection)
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=2),
+    
+    # CSRF protection (Security Misconfiguration)
+    WTF_CSRF_ENABLED=True,
+    WTF_CSRF_TIME_LIMIT=None,
+    
+    # File upload security (Insecure Design)
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max
+    
+    # Database security (SQL Injection)
+    SQLALCHEMY_ECHO=False,  # Never log SQL in production
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+)
+
+# Configure the database with enhanced security
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///community_connect.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "echo": False,  # Prevent SQL injection via logs
+    "pool_timeout": 20,
+    "max_overflow": 0,
 }
 
 # Configure Flask-Mail
@@ -45,6 +81,7 @@ mail.init_app(app)
 login_manager.login_view = 'auth.login'  # type: ignore
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
+login_manager.session_protection = "strong"  # Enhanced session protection
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -61,6 +98,37 @@ def from_json_filter(value):
         return json.loads(value)
     except (json.JSONDecodeError, TypeError):
         return []
+
+# Security headers configuration (Security Misconfiguration)
+@app.after_request
+def set_security_headers(response):
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # XSS protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Content type sniffing protection
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # HTTPS enforcement (in production)
+    if app.config.get('ENV') == 'production':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' https://cdn.jsdelivr.net https://cdn.replit.com; "
+        "connect-src 'self';"
+    )
+    
+    # Referrer policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    return response
 
 with app.app_context():
     # Import models to ensure tables are created
