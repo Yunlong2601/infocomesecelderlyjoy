@@ -165,6 +165,89 @@ def send_login_success_notification(email, user_name):
         logging.error(f"Failed to send login notification to {email}: {str(e)}")
         return False
 
+def send_termination_notification(email, user_name, reasons, custom_reason):
+    """Send account termination notification email"""
+    try:
+        # Build reason list
+        reason_list = []
+        if reasons:
+            reason_list.extend(reasons)
+        
+        # Create termination email HTML
+        html_body = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #dc3545; color: white; padding: 30px; text-align: center; border-radius: 10px; }}
+                .content {{ padding: 30px; background: #f8f9fa; border-radius: 10px; margin: 20px 0; }}
+                .reasons {{ background: white; padding: 20px; border-left: 4px solid #dc3545; margin: 20px 0; border-radius: 5px; }}
+                .footer {{ color: #6c757d; font-size: 0.9rem; text-align: center; margin-top: 30px; }}
+                ul {{ padding-left: 20px; }}
+                li {{ margin: 8px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="margin: 0;">Account Termination Notice</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 1.1rem;">Community Connect Platform</p>
+                </div>
+                <div class="content">
+                    <p style="font-size: 1.1rem;">Dear {user_name or 'User'},</p>
+                    <p>We regret to inform you that your Community Connect account has been terminated by our administration team.</p>
+                    
+                    <div class="reasons">
+                        <h3 style="color: #dc3545; margin-top: 0;">Termination Reasons:</h3>
+                        <ul>
+        '''
+        
+        for reason in reason_list:
+            html_body += f'                            <li>{reason}</li>\n'
+        
+        if custom_reason and custom_reason.strip():
+            html_body += f'                            <li><strong>Additional Details:</strong> {custom_reason.strip()}</li>\n'
+        
+        html_body += '''
+                        </ul>
+                    </div>
+                    
+                    <p>As a result of this termination:</p>
+                    <ul>
+                        <li>Your account has been permanently deactivated</li>
+                        <li>All your personal data has been removed from our systems</li>
+                        <li>Any events, applications, or RSVPs associated with your account have been deleted</li>
+                        <li>You will no longer have access to Community Connect services</li>
+                    </ul>
+                    
+                    <p>If you believe this termination was made in error or if you have questions about this decision, please contact our support team immediately.</p>
+                    
+                    <p>Thank you for being part of our community.</p>
+                    <p><strong>The Community Connect Team</strong></p>
+                </div>
+                <div class="footer">
+                    <p>This is an automated notification from Community Connect.<br>
+                    Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        msg = Message(
+            subject='Account Termination Notification - Community Connect',
+            recipients=['samplebookshopnyp@gmail.com'],  # All emails go here for school project
+            html=html_body
+        )
+        mail.send(msg)
+        logging.info(f"Termination notification sent for user: {user_name} ({email})")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send termination notification: {e}")
+        return False
+
 def send_termination_notification(email, first_name, reasons, custom_reason):
     """Send account termination notification email"""
     try:
