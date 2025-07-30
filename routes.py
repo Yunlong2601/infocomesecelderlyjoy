@@ -72,7 +72,7 @@ def register():
                 nric=form.nric.data,
                 full_name=form.full_name.data,
                 language_preference=form.language_preference.data,
-                event_interests=','.join(form.event_interests.data),
+                event_interests=','.join(form.event_interests.data) if form.event_interests.data else '',
                 security_q1=form.security_q1.data,
                 security_a1=form.security_a1.data.lower().strip(),
                 security_q2=form.security_q2.data,

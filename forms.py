@@ -37,13 +37,13 @@ class RegistrationForm(FlaskForm):
         ('cantonese', 'Cantonese')
     ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
     
-    event_interests = MultiCheckboxField('Event Interests', choices=[
+    event_interests = MultiCheckboxField('Event Interests (Optional)', choices=[
         ('social', 'Social Gatherings (Tea sessions, community dinners)'),
         ('recreational', 'Recreational Activities (Exercise, games, outings)'),
         ('educational', 'Educational Events (Health talks, skill workshops)'),
         ('cultural', 'Cultural Events (Festivals, performances)'),
         ('health', 'Health & Wellness (Medical screenings, fitness classes)')
-    ], validators=[DataRequired(message='Please select at least one interest')])
+    ], validators=[Optional()])
     
     # Security Questions for 2FA
     security_q1 = SelectField('Security Question 1', choices=[
