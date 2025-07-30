@@ -1,9 +1,10 @@
 from datetime import datetime
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+import random
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication
-from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm
+from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm
 
 main_bp = Blueprint('main', __name__)
 auth_bp = Blueprint('auth', __name__)
@@ -43,14 +44,102 @@ def login():
             user = User.query.filter_by(username=form.nric.data).first()
         
         if user and user.check_password(form.password.data):
-            login_user(user)
-            welcome_name = user.get_full_name() if user.user_type == 'elderly' else user.first_name
-            flash(f'Welcome back, {welcome_name}!', 'success')
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('main.index'))
+            # Check if elderly user needs 2FA
+            if user.user_type == 'elderly':
+                # Store user ID in session for 2FA verification
+                session['pending_user_id'] = user.id
+                return redirect(url_for('auth.two_factor'))
+            else:
+                # Non-elderly users login directly
+                login_user(user)
+                welcome_name = user.first_name
+                flash(f'Welcome back, {welcome_name}!', 'success')
+                next_page = request.args.get('next')
+                return redirect(next_page) if next_page else redirect(url_for('main.index'))
         flash('Invalid NRIC/Username or password', 'danger')
     
     return render_template('auth/login.html', form=form)
+
+@auth_bp.route('/two-factor', methods=['GET', 'POST'])
+def two_factor():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    if 'pending_user_id' not in session:
+        flash('Please log in first.', 'warning')
+        return redirect(url_for('auth.login'))
+    
+    user = User.query.get(session['pending_user_id'])
+    if not user or user.user_type != 'elderly':
+        session.pop('pending_user_id', None)
+        flash('Invalid session. Please log in again.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    # Randomly select one of the three security questions
+    questions = [
+        (user.security_q1, user.security_a1, 'security_q1'),
+        (user.security_q2, user.security_a2, 'security_q2'), 
+        (user.security_q3, user.security_a3, 'security_q3')
+    ]
+    
+    # Filter out any empty questions
+    available_questions = [(q, a, key) for q, a, key in questions if q and a]
+    
+    if not available_questions:
+        session.pop('pending_user_id', None)
+        flash('No security questions found. Please contact support.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    # Select a random question if not already selected
+    if 'selected_question' not in session:
+        selected_question, correct_answer, question_key = random.choice(available_questions)
+        session['selected_question'] = selected_question
+        session['correct_answer'] = correct_answer
+        session['question_key'] = question_key
+    else:
+        selected_question = session['selected_question']
+    
+    # Get human-readable question text
+    question_mapping = {
+        'birthplace': 'What is your place of birth?',
+        'school': 'What was the name of your primary school?',
+        'mother_maiden': 'What is your mother\'s maiden name?',
+        'first_pet': 'What was the name of your first pet?',
+        'childhood_friend': 'Who was your best friend in childhood?',
+        'first_job': 'What was your first job?',
+        'favorite_food': 'What is your favorite food?',
+        'childhood_street': 'What street did you grow up on?',
+        'spouse_birthplace': 'Where was your spouse born?',
+        'favorite_color': 'What is your favorite color?',
+        'first_car': 'What was your first car model?',
+        'wedding_venue': 'Where did you get married?'
+    }
+    
+    question_text = question_mapping.get(selected_question, selected_question)
+    
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        user_answer = form.security_answer.data.lower().strip()
+        correct_answer = session.get('correct_answer', '').lower().strip()
+        
+        if user_answer == correct_answer:
+            # 2FA successful - log in the user
+            login_user(user)
+            welcome_name = user.get_full_name()
+            flash(f'Welcome back, {welcome_name}! Security verification successful.', 'success')
+            
+            # Clear session data
+            session.pop('pending_user_id', None)
+            session.pop('selected_question', None)
+            session.pop('correct_answer', None)
+            session.pop('question_key', None)
+            
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('main.index'))
+        else:
+            flash('Incorrect answer. Please try again.', 'danger')
+    
+    return render_template('auth/two_factor.html', form=form, question=question_text, user_name=user.get_full_name())
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():

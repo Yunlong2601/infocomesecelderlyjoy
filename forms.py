@@ -104,3 +104,7 @@ class EventForm(FlaskForm):
 class VolunteerApplicationForm(FlaskForm):
     message = TextAreaField('Why would you like to volunteer for this event?', validators=[Optional()], render_kw={'class': 'form-control', 'rows': 3})
     submit = SubmitField('Apply to Volunteer', render_kw={'class': 'btn btn-primary btn-lg'})
+
+class TwoFactorForm(FlaskForm):
+    security_answer = StringField('Security Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    submit = SubmitField('Verify', render_kw={'class': 'btn btn-primary btn-lg w-100'})

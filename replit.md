@@ -12,6 +12,7 @@ Community Connect is a Flask-based web application designed to bring elderly com
   - **Volunteers**: Name, email, phone for volunteering opportunities
 - ✅ Language preferences: English, Mandarin, Malay, Tamil, Hokkien, Cantonese
 - ✅ Event interest categories: Social, Recreational, Educational, Cultural, Health & Wellness
+- ✅ Active 2FA verification during login for elderly users (randomly selected security question)
 - ✅ 2FA security questions system for elderly user protection
 - ✅ NRIC-based login for elderly users
 - ✅ PostgreSQL database with updated schema
