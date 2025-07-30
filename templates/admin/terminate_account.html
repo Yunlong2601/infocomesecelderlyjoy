@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Terminate Account - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Terminate User Account
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        <strong>Warning:</strong> This action is irreversible! All user data, events, and applications will be permanently deleted.
+                    </div>
+
+                    <!-- User Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">User Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ user.get_full_name() or user.username or user.email }}</p>
+                                    <p><strong>User Type:</strong> 
+                                        <span class="badge bg-{{ 'primary' if user.user_type == 'elderly' else 'success' if user.user_type == 'organizer' else 'info' if user.user_type == 'volunteer' else 'warning' }}">
+                                            {% if user.user_type == 'elderly' %}
+                                                Community Member
+                                            {% elif user.user_type == 'organizer' %}
+                                                Event Organizer
+                                            {% elif user.user_type == 'volunteer' %}
+                                                Volunteer
+                                            {% else %}
+                                                {{ user.user_type.title() }}
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if user.email %}
+                                        <p><strong>Email:</strong> {{ user.email }}</p>
+                                    {% endif %}
+                                    {% if user.nric %}
+                                        <p><strong>NRIC:</strong> {{ user.nric }}</p>
+                                    {% endif %}
+                                    <p><strong>Member Since:</strong> {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Unknown' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Termination Form -->
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            <label class="form-label"><strong>{{ form.termination_reasons.label.text }}</strong></label>
+                            <div class="form-text mb-2">Select all applicable reasons for terminating this account:</div>
+                            {% for subfield in form.termination_reasons %}
+                                <div class="form-check">
+                                    {{ subfield(class="form-check-input") }}
+                                    {{ subfield.label(class="form-check-label") }}
+                                </div>
+                            {% endfor %}
+                            {% if form.termination_reasons.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.termination_reasons.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.custom_reason.label(class="form-label") }}
+                            {{ form.custom_reason(class="form-control") }}
+                            {% if form.custom_reason.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.custom_reason.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.confirm_termination(class="form-check-input") }}
+                                {{ form.confirm_termination.label(class="form-check-label text-danger") }}
+                            </div>
+                            {% if form.confirm_termination.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.confirm_termination.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-danger") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add confirmation dialog for extra safety
+document.querySelector('form').addEventListener('submit', function(e) {
+    const userName = "{{ user.get_full_name() or user.username or user.email }}";
+    if (!confirm(`Are you absolutely sure you want to terminate the account for ${userName}? This action cannot be undone.`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

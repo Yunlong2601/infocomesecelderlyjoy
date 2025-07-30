@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, DateTimeField, IntegerField, SubmitField, SelectMultipleField
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, DateTimeField, IntegerField, SubmitField, SelectMultipleField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, Regexp
 from wtforms.widgets import TextArea, CheckboxInput, ListWidget
 from datetime import datetime
@@ -211,3 +211,26 @@ class EditProfileForm(FlaskForm):
     phone = StringField('Phone Number', validators=[Optional(), Regexp(r'^\d{8}$', message="Phone number must be 8 digits")], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., 91234567'})
     profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png', 'gif'], 'Images only!')], render_kw={'class': 'form-control form-control-lg'})
     submit = SubmitField('Update Profile', render_kw={'class': 'btn btn-primary btn-lg'})
+
+# Admin account termination form
+class AccountTerminationForm(FlaskForm):
+    """Form for terminating user accounts with reasons"""
+    termination_reasons = SelectMultipleField('Reason for Termination', 
+        choices=[
+            ('inactive', 'Account Inactive'),
+            ('policy_violation', 'Policy Violation'),
+            ('spam', 'Spam/Abuse'),
+            ('inappropriate_behavior', 'Inappropriate Behavior'),
+            ('security_concern', 'Security Concern'),
+            ('duplicate_account', 'Duplicate Account'),
+            ('user_request', 'User Requested Deletion'),
+            ('data_cleanup', 'Data Cleanup/Maintenance')
+        ],
+        widget=ListWidget(prefix_label=False),
+        option_widget=CheckboxInput()
+    )
+    custom_reason = TextAreaField('Additional Comments (Optional)', 
+        render_kw={"placeholder": "Provide any additional details about the termination...", "rows": 3, "class": "form-control"})
+    confirm_termination = BooleanField('I confirm that I want to terminate this account', 
+        validators=[DataRequired(message="You must confirm the termination")])
+    submit = SubmitField('Terminate Account', render_kw={'class': 'btn btn-danger'})

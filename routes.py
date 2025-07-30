@@ -8,8 +8,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
-from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm
-from email_utils import send_verification_email, send_login_success_notification
+from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
+from email_utils import send_verification_email, send_login_success_notification, send_termination_notification
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -351,7 +351,12 @@ def verify_email_login():
             session.pop('pending_login_email', None)
             
             flash(f'Welcome back, {user.get_full_name()}! You have been securely logged in.', 'success')
-            return redirect(url_for('main.index'))
+            
+            # Redirect admin users directly to admin dashboard
+            if user.user_type == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            else:
+                return redirect(url_for('main.index'))
         else:
             flash('Invalid or expired verification code. Please try again.', 'danger')
     
@@ -1357,3 +1362,85 @@ def delete_event(event_id):
     
     flash('Event deleted successfully!', 'success')
     return redirect(url_for('organizer.dashboard'))
+
+@admin_bp.route('/terminate-account/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def terminate_account(user_id):
+    """Terminate a user account with reasons"""
+    if current_user.user_type != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from terminating their own account
+    if user.id == current_user.id:
+        flash('You cannot terminate your own account.', 'warning')
+        return redirect(url_for('admin.users'))
+    
+    form = AccountTerminationForm()
+    
+    if form.validate_on_submit():
+        # Prepare termination details
+        reasons = form.termination_reasons.data
+        custom_reason = form.custom_reason.data.strip() if form.custom_reason.data else ""
+        
+        reason_text = []
+        reason_labels = {
+            'inactive': 'Account Inactive',
+            'policy_violation': 'Policy Violation',
+            'spam': 'Spam/Abuse',
+            'inappropriate_behavior': 'Inappropriate Behavior',
+            'security_concern': 'Security Concern',
+            'duplicate_account': 'Duplicate Account',
+            'user_request': 'User Requested Deletion',
+            'data_cleanup': 'Data Cleanup/Maintenance'
+        }
+        
+        for reason in reasons:
+            if reason in reason_labels:
+                reason_text.append(reason_labels[reason])
+        
+        # Send termination notification email
+        if user.email:
+            try:
+                send_termination_notification(user.email, user.get_first_name(), reason_text, custom_reason)
+            except Exception as e:
+                flash(f'Account terminated but email notification failed: {str(e)}', 'warning')
+        
+        # Delete related data
+        if user.user_type == 'elderly':
+            # Delete RSVPs
+            EventRSVP.query.filter_by(user_id=user.id).delete()
+        elif user.user_type == 'organizer':
+            # Delete events and related data
+            events = Event.query.filter_by(organizer_id=user.id).all()
+            for event in events:
+                EventRSVP.query.filter_by(event_id=event.id).delete()
+                VolunteerApplication.query.filter_by(event_id=event.id).delete()
+            Event.query.filter_by(organizer_id=user.id).delete()
+        elif user.user_type == 'volunteer':
+            # Delete volunteer applications
+            VolunteerApplication.query.filter_by(volunteer_id=user.id).delete()
+        
+        # Delete email verifications
+        EmailVerification.query.filter_by(user_id=user.id).delete()
+        
+        # Delete profile picture if exists
+        if user.profile_picture:
+            file_path = os.path.join('static', user.profile_picture)
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except:
+                    pass  # File deletion failure shouldn't stop account termination
+        
+        # Delete the user
+        username = user.get_full_name() or user.username or user.email
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'Account for {username} has been successfully terminated.', 'success')
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/terminate_account.html', form=form, user=user)

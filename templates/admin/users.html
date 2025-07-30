@@ -135,6 +135,13 @@
                                                                         </button>
                                                                     </form>
                                                                 </li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li>
+                                                                    <a class="dropdown-item text-danger" href="{{ url_for('admin.terminate_account', user_id=user.id) }}"
+                                                                       onclick="return confirm('Are you sure you want to terminate this account? This action cannot be undone.')">
+                                                                        <i class="fas fa-user-times me-2"></i>Terminate Account
+                                                                    </a>
+                                                                </li>
                                                             {% endif %}
                                                         </ul>
                                                     </div>

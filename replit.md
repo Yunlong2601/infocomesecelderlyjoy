@@ -79,7 +79,15 @@ Community Connect is a Flask-based web application designed to bring elderly com
   * Admin dashboard: Complete database management interface
   * Elderly users: Profile page serves as personal dashboard
   * Each user type gets relevant features prominently displayed
-- 🚀 Application is running with comprehensive event management, full profile features for all user types, complete admin database management, and intuitive role-based navigation
+- ✅ Enhanced admin system with account termination functionality:
+  * Admin login now redirects directly to admin dashboard
+  * Account termination with multiple reason selection (checkboxes)
+  * Custom reason text field for additional termination details
+  * Email notifications sent to users with termination reasons
+  * Complete data cascade deletion (events, RSVPs, applications, files)
+  * Safety measures: confirmation dialogs and self-termination prevention
+  * All termination emails sent to samplebookshopnyp@gmail.com
+- 🚀 Application is running with comprehensive event management, full profile features for all user types, complete admin database management with account termination, and intuitive role-based navigation
 
 ## User Preferences
 
