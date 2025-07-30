@@ -4,12 +4,18 @@ import os
 import json
 import re
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
 from email_utils import send_verification_email, send_login_success_notification, send_termination_notification
+from access_control import (
+    require_user_type, require_admin, require_organizer, require_volunteer, 
+    require_elderly, check_resource_ownership, check_event_ownership, 
+    check_application_ownership, sanitize_user_input, validate_file_upload,
+    log_security_event
+)
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -586,11 +592,9 @@ def edit():
 
 @profile_bp.route('/password', methods=['GET', 'POST'])
 @login_required
+@require_elderly()
 def change_password():
     """Change user password"""
-    if current_user.user_type != 'elderly':
-        flash('Password change is only available for elderly users.', 'warning')
-        return redirect(url_for('main.profile'))
     
     form = ChangePasswordForm()
     
@@ -607,11 +611,9 @@ def change_password():
 
 @profile_bp.route('/security', methods=['GET', 'POST'])
 @login_required
+@require_elderly()
 def security_questions():
     """Update security questions with 2FA verification"""
-    if current_user.user_type != 'elderly':
-        flash('Security questions are only available for elderly users.', 'warning')
-        return redirect(url_for('main.profile'))
     
     # Check if user has been verified for security access
     if not session.get('security_verified'):
@@ -755,11 +757,9 @@ def delete_picture():
 # Organizer Dashboard Routes
 @organizer_bp.route('/dashboard')
 @login_required
+@require_organizer()
 def dashboard():
     """Organizer dashboard with event management"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Organizer dashboard is only for event organizers.', 'danger')
-        return redirect(url_for('main.index'))
     
     # Get organizer's events with different statuses
     pending_events = Event.query.filter_by(organizer_id=current_user.id, status='pending').order_by(Event.created_at.desc()).all()
@@ -781,11 +781,9 @@ def dashboard():
 
 @organizer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
+@require_organizer()
 def profile():
     """Organizer profile management"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. This page is only for event organizers.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = EditProfileForm()
     
@@ -837,11 +835,9 @@ def profile():
 
 @organizer_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
+@require_organizer()
 def change_password():
     """Change organizer password"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. This page is only for event organizers.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = ChangePasswordForm()
     if form.validate_on_submit():
@@ -939,11 +935,9 @@ def profile():
 
 @volunteer_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
+@require_volunteer()
 def change_password():
     """Change volunteer password"""
-    if current_user.user_type != 'volunteer':
-        flash('Access denied. This page is only for volunteers.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = ChangePasswordForm()
     if form.validate_on_submit():
@@ -959,11 +953,9 @@ def change_password():
 
 @volunteer_bp.route('/delete-picture', methods=['POST'])
 @login_required
+@require_volunteer()
 def delete_picture():
     """Delete volunteer profile picture"""
-    if current_user.user_type != 'volunteer':
-        flash('Access denied.', 'danger')
-        return redirect(url_for('main.index'))
     
     if current_user.profile_picture:
         # Delete the file from filesystem
@@ -982,11 +974,9 @@ def delete_picture():
 
 @volunteer_bp.route('/dashboard')
 @login_required
+@require_volunteer()
 def dashboard():
     """Volunteer dashboard"""
-    if current_user.user_type != 'volunteer':
-        flash('Access denied. This page is only for volunteers.', 'danger')
-        return redirect(url_for('main.index'))
     
     # Get volunteer's applications and statistics
     applications = VolunteerApplication.query.filter_by(volunteer_id=current_user.id).all()
@@ -1013,11 +1003,9 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/dashboard')
 @login_required
+@require_admin()
 def dashboard():
     """Admin dashboard with database management"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     # Get database statistics
     total_users = User.query.count()
@@ -1094,11 +1082,9 @@ def users():
 
 @admin_bp.route('/events')
 @login_required
+@require_admin()
 def events():
     """Admin event management"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', 'all')
@@ -1127,11 +1113,9 @@ def events():
 
 @admin_bp.route('/event/<int:event_id>/approve', methods=['POST'])
 @login_required
+@require_admin()
 def approve_event(event_id):
     """Approve an event"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     event = Event.query.get_or_404(event_id)
     event.status = 'approved'
@@ -1142,11 +1126,9 @@ def approve_event(event_id):
 
 @admin_bp.route('/event/<int:event_id>/reject', methods=['POST'])
 @login_required
+@require_admin()
 def reject_event(event_id):
     """Reject an event"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     event = Event.query.get_or_404(event_id)
     event.status = 'rejected'
@@ -1157,11 +1139,9 @@ def reject_event(event_id):
 
 @admin_bp.route('/user/<int:user_id>/toggle-status', methods=['POST'])
 @login_required
+@require_admin()
 def toggle_user_status(user_id):
     """Toggle user active status"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     user = User.query.get_or_404(user_id)
     if user.user_type == 'admin' and user.id != current_user.id:
@@ -1178,11 +1158,9 @@ def toggle_user_status(user_id):
 
 @admin_bp.route('/create-admin', methods=['GET', 'POST'])
 @login_required
+@require_admin()
 def create_admin():
     """Create new admin account"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = EditProfileForm()
     
@@ -1213,11 +1191,9 @@ def create_admin():
 
 @organizer_bp.route('/create-event', methods=['GET', 'POST'])
 @login_required
+@require_organizer()
 def create_event():
     """Create a new event"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can create events.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = EventForm()
     if form.validate_on_submit():
@@ -1242,18 +1218,13 @@ def create_event():
 
 @organizer_bp.route('/event/<int:event_id>')
 @login_required
+@require_organizer()
 def event_detail(event_id):
     """View detailed event information and manage participants/volunteers"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can view event details.', 'danger')
-        return redirect(url_for('main.index'))
-    
     event = Event.query.get_or_404(event_id)
     
-    # Ensure the organizer owns this event
-    if event.organizer_id != current_user.id:
-        flash('Access denied. You can only view your own events.', 'danger')
-        return redirect(url_for('organizer.dashboard'))
+    # Ensure the organizer owns this event (or admin access)
+    check_event_ownership(event.organizer_id)
     
     # Get participants and volunteers
     rsvps = EventRSVP.query.filter_by(event_id=event_id).all()
@@ -1268,15 +1239,13 @@ def event_detail(event_id):
 
 @organizer_bp.route('/volunteer/<int:app_id>/approve', methods=['POST'])
 @login_required
+@require_organizer()
 def approve_volunteer(app_id):
     """Approve a volunteer application"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can manage volunteers.', 'danger')
-        return redirect(url_for('main.index'))
-    
     app = VolunteerApplication.query.get_or_404(app_id)
     
     # Verify organizer owns the event
+    check_event_ownership(app.event.organizer_id)
     if app.event.organizer_id != current_user.id:
         flash('Access denied. You can only manage volunteers for your own events.', 'danger')
         return redirect(url_for('organizer.dashboard'))
@@ -1310,18 +1279,13 @@ def reject_volunteer(app_id):
 
 @organizer_bp.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
 @login_required
+@require_organizer()
 def edit_event(event_id):
     """Edit an existing event"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can edit events.', 'danger')
-        return redirect(url_for('main.index'))
-    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the organizer owns this event
-    if event.organizer_id != current_user.id:
-        flash('Access denied. You can only edit your own events.', 'danger')
-        return redirect(url_for('organizer.dashboard'))
+    check_event_ownership(event.organizer_id)
     
     form = EventForm(obj=event)
     if form.validate_on_submit():
@@ -1340,18 +1304,13 @@ def edit_event(event_id):
 
 @organizer_bp.route('/event/<int:event_id>/delete', methods=['POST'])
 @login_required
+@require_organizer()
 def delete_event(event_id):
     """Delete an event"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can delete events.', 'danger')
-        return redirect(url_for('main.index'))
-    
     event = Event.query.get_or_404(event_id)
     
     # Ensure the organizer owns this event
-    if event.organizer_id != current_user.id:
-        flash('Access denied. You can only delete your own events.', 'danger')
-        return redirect(url_for('organizer.dashboard'))
+    check_event_ownership(event.organizer_id)
     
     # Delete related records first
     EventRSVP.query.filter_by(event_id=event_id).delete()
@@ -1365,16 +1324,14 @@ def delete_event(event_id):
 
 @admin_bp.route('/terminate-account/<int:user_id>', methods=['GET', 'POST'])
 @login_required
+@require_admin()
 def terminate_account(user_id):
     """Terminate a user account with reasons"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
-    
     user = User.query.get_or_404(user_id)
     
     # Prevent admin from terminating their own account
     if user.id == current_user.id:
+        log_security_event('admin_self_termination_attempt', current_user.id)
         flash('You cannot terminate your own account.', 'warning')
         return redirect(url_for('admin.users'))
     
