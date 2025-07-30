@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
-from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm
+from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm
 from email_utils import send_verification_email, send_login_success_notification
 
 # Profile blueprint for user profile management
