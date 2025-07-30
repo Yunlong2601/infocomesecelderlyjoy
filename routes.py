@@ -123,8 +123,8 @@ def two_factor():
     
     form = TwoFactorForm()
     if form.validate_on_submit():
-        user_answer = form.security_answer.data.lower().strip()
-        correct_answer = session.get('correct_answer', '').lower().strip()
+        user_answer = form.security_answer.data.lower().strip() if form.security_answer.data else ''
+        correct_answer = session.get('correct_answer', '').lower().strip() if session.get('correct_answer') else ''
         
         if user_answer == correct_answer:
             # 2FA successful - log in the user
@@ -167,11 +167,11 @@ def register():
                 language_preference=form.language_preference.data,
                 event_interests=','.join(form.event_interests.data) if form.event_interests.data else '',
                 security_q1=form.security_q1.data,
-                security_a1=form.security_a1.data.lower().strip(),
+                security_a1=form.security_a1.data.lower().strip() if form.security_a1.data else '',
                 security_q2=form.security_q2.data,
-                security_a2=form.security_a2.data.lower().strip(),
+                security_a2=form.security_a2.data.lower().strip() if form.security_a2.data else '',
                 security_q3=form.security_q3.data,
-                security_a3=form.security_a3.data.lower().strip(),
+                security_a3=form.security_a3.data.lower().strip() if form.security_a3.data else '',
                 user_type='elderly'
             )
         else:
@@ -181,7 +181,9 @@ def register():
                 return render_template('auth/register.html', form=form)
             
             # Create organizer/volunteer user
-            username = form.email.data or f"{form.first_name.data.lower()}{form.last_name.data.lower()}"
+            first_name = form.first_name.data or ''
+            last_name = form.last_name.data or ''
+            username = form.email.data or f"{first_name.lower()}{last_name.lower()}"
             if User.query.filter_by(username=username).first():
                 flash('Username already exists. Please choose a different one.', 'danger')
                 return render_template('auth/register.html', form=form)
@@ -189,8 +191,8 @@ def register():
             user = User(
                 username=username,
                 email=form.email.data,
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
+                first_name=first_name,
+                last_name=last_name,
                 phone=form.phone.data,
                 user_type=user_type
             )
@@ -616,8 +618,8 @@ def verify_security_access():
     
     form = TwoFactorForm()
     if form.validate_on_submit():
-        user_answer = form.security_answer.data.lower().strip()
-        correct_answer = session.get('verify_answer', '').lower().strip()
+        user_answer = form.security_answer.data.lower().strip() if form.security_answer.data else ''
+        correct_answer = session.get('verify_answer', '').lower().strip() if session.get('verify_answer') else ''
         attempts = session.get('verify_attempts', 0) + 1
         session['verify_attempts'] = attempts
         
