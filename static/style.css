@@ -1,45 +1,100 @@
-/* Elderly-Friendly Light Theme for Community Connect */
+/* Modern Community Connect Design - Elderly-Friendly */
 
-/* Base styling optimized for elderly users */
+/* Base styling with modern typography */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.8;
-    background-color: #f8f9fa !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     color: #212529 !important;
     font-size: 1.1rem;
+    min-height: 100vh;
 }
 
-/* Enhanced navbar for light theme */
+/* Modern navbar with glass effect */
+.navbar {
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+
 .navbar-brand {
     font-weight: 700;
     color: #495057 !important;
     font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    color: #667eea !important;
 }
 
 .nav-link {
     color: #495057 !important;
     font-weight: 600;
     font-size: 1.1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
 }
 
 .nav-link:hover {
-    color: #0d6efd !important;
+    color: #667eea !important;
+    transform: translateY(-2px);
 }
 
-/* Large, accessible buttons */
+.nav-link:hover::after {
+    width: 80%;
+}
+}
+
+/* Modern button styling with gradients and animations */
 .btn-lg {
     font-size: 1.3rem;
     padding: 15px 30px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-weight: 600;
-    border-width: 2px;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn {
     font-weight: 500;
-    border-radius: 6px;
-    border-width: 2px;
+    border-radius: 8px;
+    border: none;
     font-size: 1.1rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
 }
 
 /* Extra large buttons for critical actions */
@@ -89,27 +144,77 @@ body {
     font-size: 1.1rem;
 }
 
-/* Hero section styling */
+/* Modern hero section with gradient and shadows */
 .hero-section {
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    border: 1px solid #e9ecef;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
 }
 
-/* Card styling with high contrast */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    z-index: 1;
+}
+
+.hero-section > * {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-section h1 {
+    color: white !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-section .lead {
+    color: rgba(255,255,255,0.95) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Modern card styling with glass morphism effect */
 .card {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border: 2px solid #e9ecef;
-    background-color: #ffffff;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+    opacity: 1;
 }
 
 .card-header {
@@ -141,16 +246,34 @@ body {
     border-radius: 6px;
 }
 
-/* Enhanced button colors for high contrast */
+/* Modern gradient buttons */
 .btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
     font-weight: 600;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, #667eea, #764ba2) 1;
+    color: #667eea;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
 .btn-success {
@@ -314,14 +437,58 @@ footer {
     }
 }
 
+/* CSS Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.pulse-animation {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.float-animation {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+.shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
 /* Accessibility: Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
-    .card {
-        transition: none;
+    .card,
+    .btn,
+    .nav-link,
+    .navbar-brand {
+        transition: none !important;
+        animation: none !important;
     }
     
     .card:hover {
-        transform: none;
+        transform: none !important;
+    }
+    
+    .btn:hover {
+        transform: none !important;
+    }
+    
+    .float-animation,
+    .pulse-animation {
+        animation: none !important;
     }
 }
 
