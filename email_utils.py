@@ -3,7 +3,7 @@ from app import mail
 import logging
 from datetime import datetime
 
-def send_verification_email(email, verification_code, purpose='login'):
+def send_verification_email(email, verification_code, purpose='login', user_name=None):
     """Send verification email with the 6-digit code"""
     try:
         subject_map = {
@@ -38,7 +38,7 @@ def send_verification_email(email, verification_code, purpose='login'):
                     <p style="margin: 10px 0 0 0; font-size: 1.1rem; color: #6c757d;">Verification Code Required</p>
                 </div>
                 
-                <p style="font-size: 1.1rem;">Hello,</p>
+                <p style="font-size: 1.1rem;">Hello {user_name if user_name else ''},</p>
                 
                 <p style="font-size: 1.1rem;">You requested to log in to your Community Connect account. Please use the verification code below:</p>
                 
@@ -70,7 +70,7 @@ def send_verification_email(email, verification_code, purpose='login'):
         text_body = f"""
         Community Connect - Verification Code
         
-        Hello,
+        Hello {user_name if user_name else ''},
         
         You requested to log in to your Community Connect account.
         
