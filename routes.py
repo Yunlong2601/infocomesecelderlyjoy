@@ -32,17 +32,21 @@ def index():
 @main_bp.route('/profile')
 @login_required
 def profile():
+    """Redirect to appropriate dashboard based on user type"""
     if current_user.user_type == 'elderly':
+        # For elderly users, show dashboard with their events
         rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
         events = [rsvp.event for rsvp in rsvps]
         return render_template('profile.html', events=events, user_type='elderly')
     elif current_user.user_type == 'organizer':
         return redirect(url_for('organizer.dashboard'))
+    elif current_user.user_type == 'volunteer':
+        # Redirect volunteers to a dashboard instead of profile
+        return redirect(url_for('volunteer.dashboard'))
     elif current_user.user_type == 'admin':
         return redirect(url_for('admin.dashboard'))
-    else:  # volunteer
-        applications = VolunteerApplication.query.filter_by(volunteer_id=current_user.id).all()
-        return render_template('profile.html', applications=applications, user_type='volunteer')
+    else:
+        return redirect(url_for('main.index'))
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -970,6 +974,34 @@ def delete_picture():
         flash('No profile picture to delete.', 'warning')
     
     return redirect(url_for('volunteer.profile'))
+
+@volunteer_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """Volunteer dashboard"""
+    if current_user.user_type != 'volunteer':
+        flash('Access denied. This page is only for volunteers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get volunteer's applications and statistics
+    applications = VolunteerApplication.query.filter_by(volunteer_id=current_user.id).all()
+    total_applications = len(applications)
+    approved_applications = len([app for app in applications if app.status == 'approved'])
+    pending_applications = len([app for app in applications if app.status == 'pending'])
+    
+    # Get available volunteer opportunities
+    available_events = Event.query.filter(
+        Event.date >= datetime.utcnow(),
+        Event.status == 'approved',
+        Event.volunteers_needed > 0
+    ).order_by(Event.date).limit(6).all()
+    
+    return render_template('volunteer/dashboard.html',
+                         applications=applications,
+                         total_applications=total_applications,
+                         approved_applications=approved_applications,
+                         pending_applications=pending_applications,
+                         available_events=available_events)
 
 # Admin Blueprint - Database Management
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')

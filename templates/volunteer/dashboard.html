@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Volunteer Dashboard - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-hands-helping text-info me-2"></i>Volunteer Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back, {{ current_user.get_full_name() }}!</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('volunteer.profile') }}" class="btn btn-outline-info me-2">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </a>
+                    <a href="{{ url_for('events.list') }}" class="btn btn-info btn-lg">
+                        <i class="fas fa-search me-2"></i>Find Opportunities
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ total_applications }}</h4>
+                                    <p class="mb-0">Total Applications</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clipboard-list fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ approved_applications }}</h4>
+                                    <p class="mb-0">Approved</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ pending_applications }}</h4>
+                                    <p class="mb-0">Pending</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ available_events|length }}</h4>
+                                    <p class="mb-0">Available Opportunities</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-calendar-plus fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Volunteer Opportunities -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-calendar-plus me-2"></i>Available Volunteer Opportunities</h5>
+                            <a href="{{ url_for('events.list') }}" class="btn btn-sm btn-outline-primary">View All Events</a>
+                        </div>
+                        <div class="card-body">
+                            {% if available_events %}
+                                <div class="row">
+                                    {% for event in available_events %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border-info">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">{{ event.title }}</h6>
+                                                    <p class="card-text">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-calendar me-1"></i>{{ event.date.strftime('%b %d, %Y at %I:%M %p') }}<br>
+                                                            <i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}<br>
+                                                            <i class="fas fa-users me-1"></i>{{ event.volunteers_needed }} volunteers needed
+                                                        </small>
+                                                    </p>
+                                                    <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-eye me-1"></i>View Details
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center py-4">No volunteer opportunities available at the moment.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Applications -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-clipboard-list me-2"></i>My Volunteer Applications</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if applications %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Event</th>
+                                                <th>Date</th>
+                                                <th>Location</th>
+                                                <th>Status</th>
+                                                <th>Applied On</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for application in applications %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ application.event.title }}</strong><br>
+                                                        <small class="text-muted">{{ application.event.category.title() }}</small>
+                                                    </td>
+                                                    <td>{{ application.event.date.strftime('%b %d, %Y') }}</td>
+                                                    <td>{{ application.event.location }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'success' if application.status == 'approved' else 'warning' if application.status == 'pending' else 'danger' }}">
+                                                            {{ application.status.title() }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ application.created_at.strftime('%b %d, %Y') }}</td>
+                                                    <td>
+                                                        <a href="{{ url_for('events.detail', event_id=application.event.id) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye me-1"></i>View Event
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Applications Yet</h5>
+                                    <p class="text-muted">Start volunteering by exploring available events!</p>
+                                    <a href="{{ url_for('events.list') }}" class="btn btn-info">
+                                        <i class="fas fa-search me-2"></i>Browse Events
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
