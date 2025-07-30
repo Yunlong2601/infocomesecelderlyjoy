@@ -35,7 +35,7 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'samplebookshopnyp@gmail.com'
-app.config['MAIL_PASSWORD'] = 'vtxd xdyr gkkf kuys'
+app.config['MAIL_PASSWORD'] = os.environ.get('GMAIL_APP_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = 'samplebookshopnyp@gmail.com'
 
 # Initialize extensions
