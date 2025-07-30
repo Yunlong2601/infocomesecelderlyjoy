@@ -6,8 +6,9 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from models import User, Event, EventRSVP, VolunteerApplication
-from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm
+from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
+from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm
+from email_utils import send_verification_email, send_login_success_notification
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -198,6 +199,105 @@ def register():
         return redirect(url_for('auth.login'))
     
     return render_template('auth/register.html', form=form)
+
+@auth_bp.route('/email-login', methods=['GET', 'POST'])
+def email_login():
+    """Email-based login for organizers and volunteers with 2FA"""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = EmailLoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            if user.user_type in ['organizer', 'volunteer']:
+                # Send verification email
+                verification = EmailVerification.create_verification(
+                    user_id=user.id,
+                    email=user.email,
+                    purpose='login'
+                )
+                
+                if send_verification_email(user.email, verification.verification_code, 'login'):
+                    session['pending_user_id'] = user.id
+                    session['pending_login_email'] = user.email
+                    flash('A verification code has been sent to your email. Please check your inbox.', 'info')
+                    return redirect(url_for('auth.verify_email_login'))
+                else:
+                    flash('Failed to send verification email. Please try again.', 'danger')
+            else:
+                flash('Email login is only for organizers and volunteers. Elderly users should use NRIC login.', 'warning')
+        else:
+            flash('Invalid email or password. Please try again.', 'danger')
+    
+    return render_template('auth/email_login.html', form=form)
+
+@auth_bp.route('/verify-email-login', methods=['GET', 'POST'])
+def verify_email_login():
+    """Verify email login with 2FA code"""
+    if 'pending_user_id' not in session:
+        flash('No pending login found. Please try logging in again.', 'warning')
+        return redirect(url_for('auth.email_login'))
+    
+    form = EmailVerificationForm()
+    if form.validate_on_submit():
+        user_id = session.get('pending_user_id')
+        email = session.get('pending_login_email')
+        
+        # Find the verification record
+        verification = EmailVerification.query.filter_by(
+            user_id=user_id,
+            email=email,
+            verification_code=form.verification_code.data,
+            purpose='login',
+            used=False
+        ).first()
+        
+        if verification and verification.is_valid():
+            # Mark verification as used
+            verification.mark_used()
+            
+            # Log in the user
+            user = User.query.get(user_id)
+            login_user(user)
+            
+            # Send success notification
+            send_login_success_notification(user.email, user.get_full_name())
+            
+            # Clear session
+            session.pop('pending_user_id', None)
+            session.pop('pending_login_email', None)
+            
+            flash(f'Welcome back, {user.get_full_name()}! You have been securely logged in.', 'success')
+            return redirect(url_for('main.index'))
+        else:
+            flash('Invalid or expired verification code. Please try again.', 'danger')
+    
+    return render_template('auth/email_verification.html', form=form, email=session.get('pending_login_email'))
+
+@auth_bp.route('/resend-verification')
+def resend_verification():
+    """Resend verification code for email login"""
+    if 'pending_user_id' not in session:
+        flash('No pending login found. Please try logging in again.', 'warning')
+        return redirect(url_for('auth.email_login'))
+    
+    user_id = session.get('pending_user_id')
+    email = session.get('pending_login_email')
+    
+    # Create new verification code
+    verification = EmailVerification.create_verification(
+        user_id=user_id,
+        email=email,
+        purpose='login'
+    )
+    
+    if send_verification_email(email, verification.verification_code, 'login'):
+        flash('A new verification code has been sent to your email.', 'info')
+    else:
+        flash('Failed to send verification email. Please try again later.', 'danger')
+    
+    return redirect(url_for('auth.verify_email_login'))
 
 @auth_bp.route('/logout')
 @login_required

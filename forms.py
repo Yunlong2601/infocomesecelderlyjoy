@@ -182,3 +182,25 @@ class SecurityQuestionsForm(FlaskForm):
     password_confirm = PasswordField('Enter Your Password to Confirm', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
     
     submit = SubmitField('Update Security Questions', render_kw={'class': 'btn btn-info btn-lg'})
+
+# Email verification forms for organizers/volunteers
+class EmailLoginForm(FlaskForm):
+    email = StringField('Email Address', validators=[DataRequired(), Email()], 
+                       render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter your email'})
+    password = PasswordField('Password', validators=[DataRequired()], 
+                            render_kw={'class': 'form-control form-control-lg'})
+    submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary btn-lg w-100'})
+
+class EmailVerificationForm(FlaskForm):
+    verification_code = StringField('Verification Code', validators=[
+        DataRequired(),
+        Length(min=6, max=6, message='Verification code must be 6 digits'),
+        Regexp(r'^\d{6}$', message='Verification code must contain only digits')
+    ], render_kw={'class': 'form-control form-control-lg', 
+                  'placeholder': '000000', 'maxlength': '6', 'style': 'text-align: center; font-size: 2rem; letter-spacing: 0.5rem;'})
+    submit = SubmitField('Verify Code', render_kw={'class': 'btn btn-success btn-lg w-100'})
+
+class RequestVerificationForm(FlaskForm):
+    email = StringField('Email Address', validators=[DataRequired(), Email()], 
+                       render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter your email'})
+    submit = SubmitField('Send Verification Code', render_kw={'class': 'btn btn-primary btn-lg w-100'})

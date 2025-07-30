@@ -47,6 +47,16 @@
                 </form>
 
                 <div class="text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Organizers & Volunteers:</strong> 
+                        <a href="{{ url_for('auth.email_login') }}" class="btn btn-primary btn-sm ms-2">
+                            <i class="fas fa-envelope me-1"></i>Use Email Login (with 2FA)
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    
                     <p class="fs-5">Don't have an account?</p>
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg">
                         <i class="fas fa-user-plus me-1"></i>Register Here

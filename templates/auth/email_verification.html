@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Email Verification - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3><i class="fas fa-shield-alt text-success me-2"></i>Email Verification</h3>
+                    <p class="text-muted mb-0">Enter the 6-digit code sent to your email</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-envelope me-2"></i>
+                        <strong>Check Your Email:</strong> We've sent a verification code to 
+                        <strong>{{ email }}</strong>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            {{ form.verification_code.label(class="form-label text-center d-block") }}
+                            <div class="text-center">
+                                {{ form.verification_code() }}
+                            </div>
+                            <small class="form-text text-muted text-center d-block mt-2">
+                                Enter the 6-digit code from your email
+                            </small>
+                            {% if form.verification_code.errors %}
+                                <div class="text-danger text-center">
+                                    {% for error in form.verification_code.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            {{ form.submit() }}
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="text-muted">
+                            Didn't receive the code? 
+                            <a href="{{ url_for('auth.resend_verification') }}" class="text-decoration-none">
+                                <i class="fas fa-redo me-1"></i>Resend Code
+                            </a>
+                        </p>
+                        <p class="text-muted">
+                            <a href="{{ url_for('auth.email_login') }}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                            </a>
+                        </p>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-clock me-2"></i>
+                        <small><strong>Note:</strong> The verification code expires in 10 minutes. If you don't see the email, check your spam folder.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-focus on the verification code input
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.getElementById('verification_code');
+    if (codeInput) {
+        codeInput.focus();
+        
+        // Auto-submit when 6 digits are entered
+        codeInput.addEventListener('input', function() {
+            if (this.value.length === 6 && /^\d{6}$/.test(this.value)) {
+                // Add a small delay to let user see the complete code
+                setTimeout(() => {
+                    this.closest('form').submit();
+                }, 500);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

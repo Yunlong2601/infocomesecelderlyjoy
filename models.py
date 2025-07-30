@@ -1,4 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
+import string
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -31,6 +33,10 @@ class User(UserMixin, db.Model):
     user_type = db.Column(db.String(20), nullable=False, default='elderly')  # elderly, organizer, volunteer
     profile_picture = db.Column(db.String(255), nullable=True)  # Path to profile picture
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Email verification fields (for organizers/volunteers)
+    email_verified = db.Column(db.Boolean, default=False)
+    two_factor_enabled = db.Column(db.Boolean, default=False)
     
     # Relationships
     organized_events = db.relationship('Event', backref='organizer', lazy=True, foreign_keys='Event.organizer_id')
@@ -100,3 +106,48 @@ class VolunteerApplication(db.Model):
     
     # Ensure one application per volunteer per event
     __table_args__ = (db.UniqueConstraint('volunteer_id', 'event_id', name='unique_volunteer_event_application'),)
+
+class EmailVerification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    verification_code = db.Column(db.String(6), nullable=False)
+    purpose = db.Column(db.String(20), nullable=False)  # 'login', 'password_reset', 'email_change'
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    used = db.Column(db.Boolean, default=False)
+    
+    # Relationship
+    user = db.relationship('User', backref='email_verifications')
+    
+    @staticmethod
+    def generate_code():
+        """Generate a 6-digit verification code"""
+        return ''.join(secrets.choice(string.digits) for _ in range(6))
+    
+    @classmethod
+    def create_verification(cls, user_id, email, purpose, expiry_minutes=10):
+        """Create a new email verification record"""
+        # Clean up old verification codes for this user and purpose
+        cls.query.filter_by(user_id=user_id, purpose=purpose, used=False).delete()
+        db.session.commit()
+        
+        verification = cls(
+            user_id=user_id,
+            email=email,
+            verification_code=cls.generate_code(),
+            purpose=purpose,
+            expires_at=datetime.utcnow() + timedelta(minutes=expiry_minutes)
+        )
+        db.session.add(verification)
+        db.session.commit()
+        return verification
+    
+    def is_valid(self):
+        """Check if the verification code is still valid"""
+        return not self.used and datetime.utcnow() < self.expires_at
+    
+    def mark_used(self):
+        """Mark the verification code as used"""
+        self.used = True
+        db.session.commit()
