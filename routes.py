@@ -37,13 +37,18 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        # Try to find user by NRIC first (elderly users), then by username (organizers/volunteers)
+        user = User.query.filter_by(nric=form.nric.data).first()
+        if not user:
+            user = User.query.filter_by(username=form.nric.data).first()
+        
         if user and user.check_password(form.password.data):
             login_user(user)
-            flash(f'Welcome back, {user.first_name}!', 'success')
+            welcome_name = user.get_full_name() if user.user_type == 'elderly' else user.first_name
+            flash(f'Welcome back, {welcome_name}!', 'success')
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
-        flash('Invalid username or password', 'danger')
+        flash('Invalid NRIC/Username or password', 'danger')
     
     return render_template('auth/login.html', form=form)
 
@@ -54,25 +59,50 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Check if username or email already exists
-        if User.query.filter_by(username=form.username.data).first():
-            flash('Username already exists. Please choose a different one.', 'danger')
-            return render_template('auth/register.html', form=form)
+        user_type = form.user_type.data
         
-        if User.query.filter_by(email=form.email.data).first():
-            flash('Email already registered. Please use a different email.', 'danger')
-            return render_template('auth/register.html', form=form)
+        if user_type == 'elderly':
+            # Check if NRIC already exists
+            if User.query.filter_by(nric=form.nric.data).first():
+                flash('NRIC already registered. Please contact support if you need help.', 'danger')
+                return render_template('auth/register.html', form=form)
+            
+            # Create elderly user
+            user = User(
+                nric=form.nric.data,
+                full_name=form.full_name.data,
+                language_preference=form.language_preference.data,
+                event_interests=','.join(form.event_interests.data),
+                security_q1=form.security_q1.data,
+                security_a1=form.security_a1.data.lower().strip(),
+                security_q2=form.security_q2.data,
+                security_a2=form.security_a2.data.lower().strip(),
+                security_q3=form.security_q3.data,
+                security_a3=form.security_a3.data.lower().strip(),
+                user_type='elderly'
+            )
+        else:
+            # Check if username or email already exists for organizers/volunteers
+            if form.email.data and User.query.filter_by(email=form.email.data).first():
+                flash('Email already registered. Please use a different email.', 'danger')
+                return render_template('auth/register.html', form=form)
+            
+            # Create organizer/volunteer user
+            username = form.email.data or f"{form.first_name.data.lower()}{form.last_name.data.lower()}"
+            if User.query.filter_by(username=username).first():
+                flash('Username already exists. Please choose a different one.', 'danger')
+                return render_template('auth/register.html', form=form)
+            
+            user = User(
+                username=username,
+                email=form.email.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
+                phone=form.phone.data,
+                user_type=user_type
+            )
         
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            phone=form.phone.data,
-            user_type=form.user_type.data
-        )
         user.set_password(form.password.data)
-        
         db.session.add(user)
         db.session.commit()
         

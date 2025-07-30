@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+    <div class="col-md-10 col-lg-8">
         <div class="card">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
@@ -13,74 +13,13 @@
                     <p class="text-muted fs-5">Create your account to get started</p>
                 </div>
 
-                <form method="POST">
+                <form method="POST" id="registrationForm">
                     {{ form.hidden_tag() }}
                     
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            {{ form.first_name.label(class="form-label fs-5") }}
-                            {{ form.first_name() }}
-                            {% if form.first_name.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.first_name.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.last_name.label(class="form-label fs-5") }}
-                            {{ form.last_name() }}
-                            {% if form.last_name.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.last_name.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.username.label(class="form-label fs-5") }}
-                        {{ form.username() }}
-                        {% if form.username.errors %}
-                            <div class="text-danger">
-                                {% for error in form.username.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.email.label(class="form-label fs-5") }}
-                        {{ form.email() }}
-                        {% if form.email.errors %}
-                            <div class="text-danger">
-                                {% for error in form.email.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.phone.label(class="form-label fs-5") }}
-                        {{ form.phone() }}
-                        <small class="form-text text-muted">Optional - for event organizers to contact you</small>
-                        {% if form.phone.errors %}
-                            <div class="text-danger">
-                                {% for error in form.phone.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
+                    <!-- User Type Selection -->
+                    <div class="mb-4">
                         {{ form.user_type.label(class="form-label fs-5") }}
-                        {{ form.user_type() }}
+                        {{ form.user_type(onchange="toggleFormSections()") }}
                         {% if form.user_type.errors %}
                             <div class="text-danger">
                                 {% for error in form.user_type.errors %}
@@ -90,6 +29,212 @@
                         {% endif %}
                     </div>
 
+                    <!-- Elderly User Fields -->
+                    <div id="elderlyFields" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>For Elderly Community Members:</strong> Please provide your NRIC and personal details for secure access.
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.nric.label(class="form-label fs-5") }}
+                            {{ form.nric() }}
+                            <small class="form-text text-muted">Singapore NRIC format (e.g., S1234567A)</small>
+                            {% if form.nric.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.nric.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.full_name.label(class="form-label fs-5") }}
+                            {{ form.full_name() }}
+                            {% if form.full_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.full_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.language_preference.label(class="form-label fs-5") }}
+                            {{ form.language_preference() }}
+                            {% if form.language_preference.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.language_preference.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.event_interests.label(class="form-label fs-5") }}
+                            <div class="row">
+                                {% for choice in form.event_interests %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        {{ choice(class="form-check-input") }}
+                                        {{ choice.label(class="form-check-label fs-6") }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.event_interests.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.event_interests.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Security Questions -->
+                        <div class="alert alert-warning">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Security Questions:</strong> Please answer these questions for account recovery and verification.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.security_q1.label(class="form-label fs-6") }}
+                                {{ form.security_q1() }}
+                                {% if form.security_q1.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_q1.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.security_a1.label(class="form-label fs-6") }}
+                                {{ form.security_a1() }}
+                                {% if form.security_a1.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_a1.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.security_q2.label(class="form-label fs-6") }}
+                                {{ form.security_q2() }}
+                                {% if form.security_q2.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_q2.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.security_a2.label(class="form-label fs-6") }}
+                                {{ form.security_a2() }}
+                                {% if form.security_a2.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_a2.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form.security_q3.label(class="form-label fs-6") }}
+                                {{ form.security_q3() }}
+                                {% if form.security_q3.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_q3.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.security_a3.label(class="form-label fs-6") }}
+                                {{ form.security_a3() }}
+                                {% if form.security_a3.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.security_a3.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Organizer/Volunteer Fields -->
+                    <div id="organizerFields" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>For Organizers & Volunteers:</strong> Please provide your contact details.
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.first_name.label(class="form-label fs-5") }}
+                                {{ form.first_name() }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.first_name.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name.label(class="form-label fs-5") }}
+                                {{ form.last_name() }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.last_name.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label fs-5") }}
+                            {{ form.email() }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label fs-5") }}
+                            {{ form.phone() }}
+                            <small class="form-text text-muted">Optional - for event participants to contact you</small>
+                            {% if form.phone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.phone.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Password Fields (Common) -->
                     <div class="row mb-3">
                         <div class="col-md-6">
                             {{ form.password.label(class="form-label fs-5") }}
@@ -130,4 +275,48 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleFormSections() {
+    const userType = document.getElementById('user_type').value;
+    const elderlyFields = document.getElementById('elderlyFields');
+    const organizerFields = document.getElementById('organizerFields');
+    
+    if (userType === 'elderly') {
+        elderlyFields.style.display = 'block';
+        organizerFields.style.display = 'none';
+        
+        // Make elderly fields required
+        document.getElementById('nric').required = true;
+        document.getElementById('full_name').required = true;
+        document.getElementById('language_preference').required = true;
+        
+        // Make organizer fields optional
+        document.getElementById('first_name').required = false;
+        document.getElementById('last_name').required = false;
+        document.getElementById('email').required = false;
+    } else if (userType === 'organizer' || userType === 'volunteer') {
+        elderlyFields.style.display = 'none';
+        organizerFields.style.display = 'block';
+        
+        // Make organizer fields required
+        document.getElementById('first_name').required = true;
+        document.getElementById('last_name').required = true;
+        document.getElementById('email').required = true;
+        
+        // Make elderly fields optional
+        document.getElementById('nric').required = false;
+        document.getElementById('full_name').required = false;
+        document.getElementById('language_preference').required = false;
+    } else {
+        elderlyFields.style.display = 'none';
+        organizerFields.style.display = 'none';
+    }
+}
+
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleFormSections();
+});
+</script>
 {% endblock %}

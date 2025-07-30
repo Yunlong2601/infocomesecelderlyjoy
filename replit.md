@@ -5,14 +5,18 @@
 Community Connect is a Flask-based web application designed to bring elderly community members together through social events, recreational activities, and educational opportunities. The platform serves three distinct user types: community members (elderly users), event organizers, and volunteers, creating a comprehensive ecosystem for community engagement.
 
 ### Current Status (July 30, 2025)
-- ✅ Complete authentication system with login/register pages
-- ✅ Three user roles: elderly, organizer, volunteer
-- ✅ Event creation and management for organizers
-- ✅ RSVP system for community members
-- ✅ Volunteer application system
-- ✅ PostgreSQL database integration
-- ✅ Bootstrap dark theme with accessibility features
-- 🚀 Application is running and ready for testing
+- ✅ Enhanced registration system with NRIC validation for elderly users
+- ✅ Three distinct user roles with different registration flows:
+  - **Elderly**: NRIC, full name, language preference, event interests, 3 security questions (2FA)
+  - **Organizers**: Name, email, phone for event management
+  - **Volunteers**: Name, email, phone for volunteering opportunities
+- ✅ Language preferences: English, Mandarin, Malay, Tamil, Hokkien, Cantonese
+- ✅ Event interest categories: Social, Recreational, Educational, Cultural, Health & Wellness
+- ✅ 2FA security questions system for elderly user protection
+- ✅ NRIC-based login for elderly users
+- ✅ PostgreSQL database with updated schema
+- ✅ Dynamic registration form with conditional fields
+- 🚀 Application is running with enhanced elderly-focused features
 
 ## User Preferences
 

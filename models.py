@@ -5,12 +5,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
+    # For elderly users - NRIC as unique identifier
+    nric = db.Column(db.String(9), unique=True, nullable=True)  # For elderly users
+    full_name = db.Column(db.String(100), nullable=True)  # For elderly users
+    language_preference = db.Column(db.String(20), nullable=True)  # For elderly users
+    event_interests = db.Column(db.Text, nullable=True)  # JSON string of interests for elderly
+    
+    # Security questions for 2FA (elderly users)
+    security_q1 = db.Column(db.String(100), nullable=True)
+    security_a1 = db.Column(db.String(200), nullable=True)
+    security_q2 = db.Column(db.String(100), nullable=True)
+    security_a2 = db.Column(db.String(200), nullable=True)
+    security_q3 = db.Column(db.String(100), nullable=True)
+    security_a3 = db.Column(db.String(200), nullable=True)
+    
+    # For organizers/volunteers - traditional fields
+    username = db.Column(db.String(64), unique=True, nullable=True)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(20))
+    
+    # Common fields
+    password_hash = db.Column(db.String(256), nullable=False)
     user_type = db.Column(db.String(20), nullable=False, default='elderly')  # elderly, organizer, volunteer
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -26,7 +43,14 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def get_full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        if self.user_type == 'elderly':
+            return self.full_name or 'Elderly User'
+        return f"{self.first_name} {self.last_name}" if self.first_name and self.last_name else 'User'
+    
+    def get_display_name(self):
+        if self.user_type == 'elderly':
+            return self.nric or 'Unknown NRIC'
+        return self.username or self.email or 'Unknown User'
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
