@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-heart text-danger me-3"></i>
+                Welcome to Community Connect
+            </h1>
+            <p class="lead fs-3 mb-4">
+                Discover meaningful social events, connect with your community, and find opportunities to help others.
+            </p>
+            {% if not current_user.is_authenticated %}
+            <div class="d-grid gap-3 d-md-flex">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Join Today
+                </a>
+                <a href="{{ url_for('events.list') }}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-calendar me-2"></i>Browse Events
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-6 text-center">
+            <i class="fas fa-users fa-10x text-primary opacity-75"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar-plus fa-3x text-primary mb-3"></i>
+                <h5 class="card-title fs-4">Find Events</h5>
+                <p class="card-text fs-5">
+                    Discover social gatherings, recreational activities, and educational events in your community.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-hands-helping fa-3x text-success mb-3"></i>
+                <h5 class="card-title fs-4">Volunteer</h5>
+                <p class="card-text fs-5">
+                    Help make events special by volunteering your time and skills to support community activities.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <i class="fas fa-bullhorn fa-3x text-warning mb-3"></i>
+                <h5 class="card-title fs-4">Organize</h5>
+                <p class="card-text fs-5">
+                    Create and manage events to bring people together and strengthen community bonds.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if events %}
+<div class="upcoming-events">
+    <h2 class="mb-4">
+        <i class="fas fa-star text-warning me-2"></i>
+        Upcoming Events
+    </h2>
+    <div class="row">
+        {% for event in events %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' }} fs-6">
+                            {{ event.category.title() }}
+                        </span>
+                        <small class="text-muted">
+                            {{ event.date.strftime('%b %d, %Y') }}
+                        </small>
+                    </div>
+                    <h5 class="card-title fs-4">{{ event.title }}</h5>
+                    <p class="card-text">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                        {{ event.location }}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-clock text-info me-1"></i>
+                        {{ event.date.strftime('%I:%M %p') }} ({{ event.duration_hours }}h)
+                    </p>
+                    {% if event.description %}
+                    <p class="card-text text-muted">
+                        {{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-info-circle me-1"></i>View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-calendar me-2"></i>View All Events
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+    <h3>No upcoming events yet</h3>
+    <p class="text-muted fs-5">Check back soon for exciting community events!</p>
+    {% if current_user.is_authenticated and current_user.user_type == 'organizer' %}
+    <a href="{{ url_for('events.create') }}" class="btn btn-primary btn-lg mt-3">
+        <i class="fas fa-plus me-2"></i>Create the First Event
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

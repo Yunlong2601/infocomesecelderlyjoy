@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Community Connect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title">Join Community Connect</h2>
+                    <p class="text-muted fs-5">Create your account to get started</p>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.first_name.label(class="form-label fs-5") }}
+                            {{ form.first_name() }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.first_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_name.label(class="form-label fs-5") }}
+                            {{ form.last_name() }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.last_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label fs-5") }}
+                        {{ form.username() }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label fs-5") }}
+                        {{ form.email() }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label fs-5") }}
+                        {{ form.phone() }}
+                        <small class="form-text text-muted">Optional - for event organizers to contact you</small>
+                        {% if form.phone.errors %}
+                            <div class="text-danger">
+                                {% for error in form.phone.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.user_type.label(class="form-label fs-5") }}
+                        {{ form.user_type() }}
+                        {% if form.user_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.user_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.password.label(class="form-label fs-5") }}
+                            {{ form.password() }}
+                            {% if form.password.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.password.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.password2.label(class="form-label fs-5") }}
+                            {{ form.password2() }}
+                            {% if form.password2.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.password2.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        {{ form.submit() }}
+                    </div>
+                </form>
+
+                <div class="text-center">
+                    <p class="fs-5">Already have an account?</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-sign-in-alt me-1"></i>Sign In Here
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

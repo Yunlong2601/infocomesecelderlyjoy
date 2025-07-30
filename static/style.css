@@ -1,0 +1,162 @@
+/* Custom styles for accessibility and better user experience */
+
+/* Large, accessible text for elderly users */
+.navbar-brand {
+    font-weight: 600;
+}
+
+.btn-lg {
+    font-size: 1.125rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+}
+
+/* Extra large buttons for critical actions */
+.btn-xl {
+    font-size: 1.25rem;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+}
+
+/* Hero section styling */
+.hero-section {
+    padding: 2rem 0;
+    background: linear-gradient(135deg, var(--bs-primary-bg-subtle) 0%, var(--bs-secondary-bg-subtle) 100%);
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Badge styling for better visibility */
+.badge {
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Improved form styling */
+.form-control-lg {
+    font-size: 1.125rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-select-lg {
+    font-size: 1.125rem;
+    padding: 0.75rem 1rem;
+}
+
+/* Better spacing for form groups */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+/* Loading states */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Better focus indicators for accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* High contrast text for better readability */
+.text-high-contrast {
+    color: var(--bs-body-color) !important;
+    font-weight: 500;
+}
+
+/* Event card specific styling */
+.event-card {
+    border-left: 4px solid var(--bs-primary);
+}
+
+.event-card.social {
+    border-left-color: var(--bs-primary);
+}
+
+.event-card.recreational {
+    border-left-color: var(--bs-success);
+}
+
+.event-card.educational {
+    border-left-color: var(--bs-info);
+}
+
+/* Profile page styling */
+.profile-card {
+    background: linear-gradient(135deg, var(--bs-light) 0%, var(--bs-body-bg) 100%);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.625rem 1.25rem;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 1.125rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .btn,
+    footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Dark theme specific adjustments */
+[data-bs-theme="dark"] .hero-section {
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.1) 0%, rgba(var(--bs-secondary-rgb), 0.1) 100%);
+}
+
+[data-bs-theme="dark"] .card:hover {
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+}
+
+/* Accessibility: Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .card {
+        transition: none;
+    }
+    
+    .card:hover {
+        transform: none;
+    }
+}

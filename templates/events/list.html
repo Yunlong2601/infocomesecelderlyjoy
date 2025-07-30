@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Community Connect{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-calendar text-primary me-2"></i>
+        Community Events
+    </h1>
+    {% if current_user.is_authenticated and current_user.user_type == 'organizer' %}
+    <a href="{{ url_for('events.create') }}" class="btn btn-success btn-lg">
+        <i class="fas fa-plus me-1"></i>Create Event
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label fs-5">Search Events</label>
+                <input type="text" class="form-control form-control-lg" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Search by title or description">
+            </div>
+            <div class="col-md-4">
+                <label for="category" class="form-label fs-5">Category</label>
+                <select class="form-select form-select-lg" id="category" name="category">
+                    <option value="">All Categories</option>
+                    <option value="social" {% if request.args.get('category') == 'social' %}selected{% endif %}>Social Gathering</option>
+                    <option value="recreational" {% if request.args.get('category') == 'recreational' %}selected{% endif %}>Recreational Activity</option>
+                    <option value="educational" {% if request.args.get('category') == 'educational' %}selected{% endif %}>Educational/Learning</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if events %}
+<div class="row">
+    {% for event in events %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' }} fs-6">
+                        <i class="fas fa-{{ 'users' if event.category == 'social' else 'running' if event.category == 'recreational' else 'graduation-cap' }} me-1"></i>
+                        {{ event.category.title() }}
+                    </span>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ event.date.strftime('%b %d') }}
+                    </small>
+                </div>
+                
+                <h5 class="card-title fs-4 mb-3">{{ event.title }}</h5>
+                
+                <div class="mb-2">
+                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                    <span class="fs-5">{{ event.location }}</span>
+                </div>
+                
+                <div class="mb-2">
+                    <i class="fas fa-clock text-info me-2"></i>
+                    <span class="fs-5">{{ event.date.strftime('%I:%M %p') }} ({{ event.duration_hours }}h)</span>
+                </div>
+                
+                <div class="mb-3">
+                    <i class="fas fa-user-tie text-secondary me-2"></i>
+                    <span class="fs-5">{{ event.organizer.get_full_name() }}</span>
+                </div>
+                
+                {% if event.description %}
+                <p class="card-text text-muted">
+                    {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
+                </p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-users me-1"></i>
+                        {{ event.get_rsvp_count() }} attending
+                        {% if event.max_participants %}
+                        / {{ event.max_participants }} max
+                        {% endif %}
+                    </small>
+                    {% if event.volunteers_needed > 0 %}
+                    <small class="text-muted">
+                        <i class="fas fa-hands-helping me-1"></i>
+                        {{ event.get_volunteer_count() }}/{{ event.volunteers_needed }} volunteers
+                    </small>
+                    {% endif %}
+                </div>
+                
+                {% if current_user.is_authenticated %}
+                <div class="d-grid gap-2">
+                    {% if event.id in user_rsvps %}
+                    <span class="btn btn-success btn-lg disabled">
+                        <i class="fas fa-check me-1"></i>You're Attending
+                    </span>
+                    {% elif current_user.user_type in ['elderly', 'volunteer'] %}
+                    <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-calendar-plus me-1"></i>RSVP Now
+                    </a>
+                    {% endif %}
+                    
+                    {% if current_user.user_type == 'volunteer' and event.volunteers_needed > 0 %}
+                        {% if event.id in user_applications %}
+                        <span class="btn btn-warning btn-lg disabled">
+                            <i class="fas fa-clock me-1"></i>Volunteer Application Pending
+                        </span>
+                        {% else %}
+                        <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-outline-success btn-lg">
+                            <i class="fas fa-hands-helping me-1"></i>Volunteer
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="d-grid">
+                    <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-info-circle me-1"></i>View Details
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+    <h3>No events found</h3>
+    {% if request.args.get('search') or request.args.get('category') %}
+    <p class="text-muted fs-5">Try adjusting your search criteria.</p>
+    <a href="{{ url_for('events.list') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times me-1"></i>Clear Filters
+    </a>
+    {% else %}
+    <p class="text-muted fs-5">No events are currently scheduled. Check back soon!</p>
+    {% endif %}
+    
+    {% if current_user.is_authenticated and current_user.user_type == 'organizer' %}
+    <div class="mt-3">
+        <a href="{{ url_for('events.create') }}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus me-1"></i>Create the First Event
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

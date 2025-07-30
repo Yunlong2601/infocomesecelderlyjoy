@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Create Event - Community Connect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-calendar-plus fa-3x text-success mb-3"></i>
+                    <h2 class="card-title">Create New Event</h2>
+                    <p class="text-muted fs-5">Bring your community together with a meaningful event</p>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label fs-5") }}
+                        {{ form.title() }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.title.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label fs-5") }}
+                        {{ form.description() }}
+                        <small class="form-text text-muted">Describe what attendees can expect from this event</small>
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.category.label(class="form-label fs-5") }}
+                            {{ form.category() }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.category.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.duration_hours.label(class="form-label fs-5") }}
+                            {{ form.duration_hours() }}
+                            {% if form.duration_hours.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.duration_hours.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.date.label(class="form-label fs-5") }}
+                        {{ form.date() }}
+                        {% if form.date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.location.label(class="form-label fs-5") }}
+                        {{ form.location() }}
+                        <small class="form-text text-muted">Include the full address if possible</small>
+                        {% if form.location.errors %}
+                            <div class="text-danger">
+                                {% for error in form.location.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            {{ form.max_participants.label(class="form-label fs-5") }}
+                            {{ form.max_participants() }}
+                            <small class="form-text text-muted">Leave empty for unlimited</small>
+                            {% if form.max_participants.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.max_participants.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.volunteers_needed.label(class="form-label fs-5") }}
+                            {{ form.volunteers_needed() }}
+                            <small class="form-text text-muted">How many volunteers do you need?</small>
+                            {% if form.volunteers_needed.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.volunteers_needed.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('events.list') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        {{ form.submit() }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

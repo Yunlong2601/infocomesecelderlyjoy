@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} - Community Connect{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' }} fs-5">
+                        <i class="fas fa-{{ 'users' if event.category == 'social' else 'running' if event.category == 'recreational' else 'graduation-cap' }} me-1"></i>
+                        {{ event.category.title() }}
+                    </span>
+                    <small class="text-muted fs-6">
+                        Created {{ event.created_at.strftime('%b %d, %Y') }}
+                    </small>
+                </div>
+                
+                <h1 class="mb-4">{{ event.title }}</h1>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h5><i class="fas fa-calendar text-primary me-2"></i>Date & Time</h5>
+                            <p class="fs-5 mb-1">{{ event.date.strftime('%A, %B %d, %Y') }}</p>
+                            <p class="fs-5 text-muted">{{ event.date.strftime('%I:%M %p') }} ({{ event.duration_hours }} hours)</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5><i class="fas fa-map-marker-alt text-danger me-2"></i>Location</h5>
+                            <p class="fs-5">{{ event.location }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h5><i class="fas fa-user-tie text-secondary me-2"></i>Organizer</h5>
+                            <p class="fs-5 mb-1">{{ event.organizer.get_full_name() }}</p>
+                            {% if event.organizer.phone %}
+                            <p class="fs-6 text-muted">
+                                <i class="fas fa-phone me-1"></i>{{ event.organizer.phone }}
+                            </p>
+                            {% endif %}
+                            <p class="fs-6 text-muted">
+                                <i class="fas fa-envelope me-1"></i>{{ event.organizer.email }}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5><i class="fas fa-users text-info me-2"></i>Attendance</h5>
+                            <p class="fs-5">
+                                {{ event.get_rsvp_count() }} people attending
+                                {% if event.max_participants %}
+                                ({{ event.max_participants }} max)
+                                {% endif %}
+                            </p>
+                            {% if event.is_full() %}
+                            <span class="badge bg-warning fs-6">Event Full</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if event.description %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-info-circle text-info me-2"></i>About This Event</h5>
+                    <p class="fs-5 lh-base">{{ event.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if event.volunteers_needed > 0 %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-hands-helping text-success me-2"></i>Volunteers Needed</h5>
+                    <p class="fs-5">
+                        This event needs {{ event.volunteers_needed }} volunteers. 
+                        Currently {{ event.get_volunteer_count() }} volunteer(s) have been approved.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-hand-paper text-primary me-2"></i>
+                    Join This Event
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_authenticated %}
+                    {% if user_rsvp %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>You're attending this event!</strong>
+                    </div>
+                    <form method="POST" action="{{ url_for('events.cancel_rsvp', event_id=event.id) }}">
+                        <button type="submit" class="btn btn-outline-danger btn-lg w-100 mb-3">
+                            <i class="fas fa-times me-1"></i>Cancel RSVP
+                        </button>
+                    </form>
+                    {% elif current_user.user_type in ['elderly', 'volunteer'] %}
+                        {% if event.is_full() %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            This event is currently full.
+                        </div>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('events.rsvp', event_id=event.id) }}">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="fas fa-calendar-plus me-1"></i>RSVP to Attend
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% elif current_user.user_type == 'organizer' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        As an organizer, you can create your own events.
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.user_type == 'volunteer' and event.volunteers_needed > 0 %}
+                    <hr>
+                    <h6><i class="fas fa-hands-helping text-success me-2"></i>Volunteer Opportunity</h6>
+                    {% if user_application %}
+                        <div class="alert alert-{{ 'success' if user_application.status == 'approved' else 'warning' if user_application.status == 'pending' else 'danger' }}">
+                            <i class="fas fa-{{ 'check-circle' if user_application.status == 'approved' else 'clock' if user_application.status == 'pending' else 'times-circle' }} me-2"></i>
+                            Application {{ user_application.status.title() }}
+                        </div>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('events.volunteer', event_id=event.id) }}">
+                        {{ volunteer_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ volunteer_form.message.label(class="form-label") }}
+                            {{ volunteer_form.message(class="form-control") }}
+                        </div>
+                        {{ volunteer_form.submit(class="btn btn-success w-100") }}
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Please log in to RSVP or volunteer for this event.</strong>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-1"></i>Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-user-plus me-1"></i>Register
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('events.list') }}" class="btn btn-outline-secondary btn-lg w-100">
+                <i class="fas fa-arrow-left me-1"></i>Back to Events
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
