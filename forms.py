@@ -179,4 +179,6 @@ class SecurityQuestionsForm(FlaskForm):
     
     security_a3 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
     
+    password_confirm = PasswordField('Enter Your Password to Confirm', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    
     submit = SubmitField('Update Security Questions', render_kw={'class': 'btn btn-info btn-lg'})

@@ -420,24 +420,35 @@ def change_password():
 @profile_bp.route('/security', methods=['GET', 'POST'])
 @login_required
 def security_questions():
-    """Update security questions"""
+    """Update security questions with 2FA verification"""
     if current_user.user_type != 'elderly':
         flash('Security questions are only available for elderly users.', 'warning')
         return redirect(url_for('main.profile'))
     
+    # Check if user has been verified for security access
+    if not session.get('security_verified'):
+        return redirect(url_for('profile.verify_security_access'))
+    
     form = SecurityQuestionsForm()
     
     if form.validate_on_submit():
-        current_user.security_q1 = form.security_q1.data
-        current_user.security_a1 = form.security_a1.data
-        current_user.security_q2 = form.security_q2.data
-        current_user.security_a2 = form.security_a2.data
-        current_user.security_q3 = form.security_q3.data
-        current_user.security_a3 = form.security_a3.data
-        
-        db.session.commit()
-        flash('Security questions updated successfully!', 'success')
-        return redirect(url_for('profile.settings'))
+        # Verify password as additional security measure
+        if not current_user.check_password(form.password_confirm.data):
+            flash('Incorrect password. Please try again.', 'danger')
+        else:
+            current_user.security_q1 = form.security_q1.data
+            current_user.security_a1 = form.security_a1.data
+            current_user.security_q2 = form.security_q2.data
+            current_user.security_a2 = form.security_a2.data
+            current_user.security_q3 = form.security_q3.data
+            current_user.security_a3 = form.security_a3.data
+            
+            db.session.commit()
+            flash('Security questions updated successfully!', 'success')
+            
+            # Clear the security verification after use
+            session.pop('security_verified', None)
+            return redirect(url_for('profile.settings'))
     
     # Populate form with current data
     form.security_q1.data = current_user.security_q1
@@ -448,6 +459,87 @@ def security_questions():
     form.security_a3.data = current_user.security_a3
     
     return render_template('profile/security.html', form=form)
+
+@profile_bp.route('/verify-security', methods=['GET', 'POST'])
+@login_required
+def verify_security_access():
+    """Verify user's identity before allowing security question changes"""
+    if current_user.user_type != 'elderly':
+        flash('Security verification is only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    # Get available security questions for verification
+    questions = []
+    if current_user.security_q1 and current_user.security_a1:
+        questions.append((current_user.security_q1, current_user.security_a1, 'security_q1'))
+    if current_user.security_q2 and current_user.security_a2:
+        questions.append((current_user.security_q2, current_user.security_a2, 'security_q2'))
+    if current_user.security_q3 and current_user.security_a3:
+        questions.append((current_user.security_q3, current_user.security_a3, 'security_q3'))
+    
+    if not questions:
+        flash('No security questions are set up. You can update them directly.', 'info')
+        session['security_verified'] = True
+        return redirect(url_for('profile.security_questions'))
+    
+    # Select a random question for verification
+    if 'verify_question' not in session:
+        selected_question, correct_answer, question_key = random.choice(questions)
+        session['verify_question'] = selected_question
+        session['verify_answer'] = correct_answer
+        session['verify_attempts'] = 0
+    else:
+        selected_question = session['verify_question']
+    
+    # Get human-readable question text
+    question_mapping = {
+        'birthplace': 'What is your place of birth?',
+        'school': 'What was the name of your primary school?',
+        'mother_maiden': 'What is your mother\'s maiden name?',
+        'first_pet': 'What was the name of your first pet?',
+        'childhood_friend': 'Who was your best friend in childhood?',
+        'first_job': 'What was your first job?',
+        'favorite_food': 'What is your favorite food?',
+        'childhood_street': 'What street did you grow up on?',
+        'spouse_birthplace': 'Where was your spouse born?',
+        'favorite_color': 'What is your favorite color?',
+        'first_car': 'What was your first car model?',
+        'wedding_venue': 'Where did you get married?'
+    }
+    
+    question_text = question_mapping.get(selected_question, selected_question)
+    
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        user_answer = form.security_answer.data.lower().strip()
+        correct_answer = session.get('verify_answer', '').lower().strip()
+        attempts = session.get('verify_attempts', 0) + 1
+        session['verify_attempts'] = attempts
+        
+        if user_answer == correct_answer:
+            # Verification successful
+            session['security_verified'] = True
+            # Clear verification session data
+            session.pop('verify_question', None)
+            session.pop('verify_answer', None)
+            session.pop('verify_attempts', None)
+            
+            flash('Identity verified successfully! You can now update your security questions.', 'success')
+            return redirect(url_for('profile.security_questions'))
+        else:
+            if attempts >= 3:
+                # Too many failed attempts - clear session and redirect
+                session.pop('verify_question', None)
+                session.pop('verify_answer', None)
+                session.pop('verify_attempts', None)
+                flash('Too many incorrect attempts. Please try again later or contact support.', 'danger')
+                return redirect(url_for('profile.settings'))
+            else:
+                remaining = 3 - attempts
+                flash(f'Incorrect answer. You have {remaining} attempt(s) remaining.', 'danger')
+    
+    return render_template('profile/verify_security.html', form=form, question=question_text, 
+                         attempts=session.get('verify_attempts', 0))
 
 @profile_bp.route('/delete-picture', methods=['POST'])
 @login_required

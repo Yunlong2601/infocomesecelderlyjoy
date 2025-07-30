@@ -17,6 +17,11 @@
                         Choose questions only you would know the answer to.
                     </div>
                     
+                    <div class="alert alert-info">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>Security Notice:</strong> You have already been verified to access this page. Please enter your password one more time to confirm these changes.
+                    </div>
+                    
                     <form method="POST">
                         {{ form.hidden_tag() }}
                         
@@ -108,6 +113,27 @@
                                     {% if form.security_a3.errors %}
                                         <div class="text-danger">
                                             {% for error in form.security_a3.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Confirmation -->
+                        <div class="card mb-4 border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6><i class="fas fa-lock me-1"></i>Confirm Your Identity</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form.password_confirm.label(class="form-label") }}
+                                    {{ form.password_confirm() }}
+                                    <small class="form-text text-muted">Enter your current password to confirm these changes</small>
+                                    {% if form.password_confirm.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password_confirm.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
