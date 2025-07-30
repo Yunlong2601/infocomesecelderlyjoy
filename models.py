@@ -37,6 +37,7 @@ class User(UserMixin, db.Model):
     # Email verification fields (for organizers/volunteers)
     email_verified = db.Column(db.Boolean, default=False)
     two_factor_enabled = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)  # For admin user management
     
     # Relationships
     organized_events = db.relationship('Event', backref='organizer', lazy=True, foreign_keys='Event.organizer_id')

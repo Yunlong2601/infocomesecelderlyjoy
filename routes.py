@@ -1131,11 +1131,11 @@ def toggle_user_status(user_id):
         flash('Cannot modify other admin accounts.', 'danger')
         return redirect(request.referrer or url_for('admin.users'))
     
-    # Toggle active status (assuming we add this field)
-    user.is_active = not getattr(user, 'is_active', True)
+    # Toggle active status
+    user.is_active = not user.is_active
     db.session.commit()
     
-    status = 'activated' if getattr(user, 'is_active', True) else 'deactivated'
+    status = 'activated' if user.is_active else 'deactivated'
     flash(f'User {user.get_full_name()} has been {status}.', 'success')
     return redirect(request.referrer or url_for('admin.users'))
 
