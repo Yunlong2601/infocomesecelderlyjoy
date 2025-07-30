@@ -77,6 +77,7 @@ def login():
                 
                 if send_verification_email(user.email, verification.verification_code, 'login'):
                     session['pending_user_id'] = user.id
+                    session['pending_login_email'] = user.email
                     session['verification_id'] = verification.id
                     flash('Please check your email for the verification code.', 'info')
                     return redirect(url_for('auth.verify_email_login'))

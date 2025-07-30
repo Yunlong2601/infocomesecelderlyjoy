@@ -79,7 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value.length === 6 && /^\d{6}$/.test(this.value)) {
                 // Add a small delay to let user see the complete code
                 setTimeout(() => {
-                    this.closest('form').submit();
+                    const form = this.closest('form');
+                    if (form && typeof form.submit === 'function') {
+                        form.submit();
+                    }
                 }, 500);
             }
         });
