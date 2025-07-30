@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -39,16 +40,28 @@ def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
 
+# Add custom template filters
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Convert JSON string to Python object"""
+    if not value:
+        return []
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
     db.create_all()
 
 # Import and register routes
-from routes import main_bp, auth_bp, events_bp
+from routes import main_bp, auth_bp, events_bp, profile_bp
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(events_bp, url_prefix='/events')
+app.register_blueprint(profile_bp, url_prefix='/profile')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

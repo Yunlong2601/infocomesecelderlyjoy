@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, DateTimeField, IntegerField, SubmitField, SelectMultipleField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, Regexp
 from wtforms.widgets import TextArea, CheckboxInput, ListWidget
@@ -108,3 +109,74 @@ class VolunteerApplicationForm(FlaskForm):
 class TwoFactorForm(FlaskForm):
     security_answer = StringField('Security Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
     submit = SubmitField('Verify', render_kw={'class': 'btn btn-primary btn-lg w-100'})
+
+class ElderlyProfileForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    
+    language_preference = SelectField('Language Preference', choices=[
+        ('english', 'English'),
+        ('mandarin', 'Mandarin'),
+        ('malay', 'Malay'),
+        ('tamil', 'Tamil'),
+        ('hokkien', 'Hokkien'),
+        ('cantonese', 'Cantonese')
+    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    
+    event_interests = MultiCheckboxField('Event Interests', choices=[
+        ('social', 'Social Gatherings (Tea sessions, community dinners)'),
+        ('recreational', 'Recreational Activities (Exercise, games, outings)'),
+        ('educational', 'Educational Events (Health talks, skill workshops)'),
+        ('cultural', 'Cultural Events (Festivals, performances)'),
+        ('health', 'Health & Wellness (Medical screenings, fitness classes)')
+    ], validators=[Optional()])
+    
+    profile_picture = FileField('Profile Picture', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Only image files are allowed!')
+    ], render_kw={'class': 'form-control form-control-lg'})
+    
+    submit = SubmitField('Update Profile', render_kw={'class': 'btn btn-success btn-lg'})
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=6, message='Password must be at least 6 characters long')
+    ], render_kw={'class': 'form-control form-control-lg'})
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('new_password', message='Passwords must match')
+    ], render_kw={'class': 'form-control form-control-lg'})
+    submit = SubmitField('Change Password', render_kw={'class': 'btn btn-warning btn-lg'})
+
+class SecurityQuestionsForm(FlaskForm):
+    security_q1 = SelectField('Security Question 1', choices=[
+        ('', 'Choose a question...'),
+        ('birthplace', 'What is your place of birth?'),
+        ('school', 'What was the name of your primary school?'),
+        ('mother_maiden', 'What is your mother\'s maiden name?'),
+        ('first_pet', 'What was the name of your first pet?')
+    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    
+    security_a1 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    
+    security_q2 = SelectField('Security Question 2', choices=[
+        ('', 'Choose a question...'),
+        ('childhood_friend', 'Who was your best friend in childhood?'),
+        ('first_job', 'What was your first job?'),
+        ('favorite_food', 'What is your favorite food?'),
+        ('childhood_street', 'What street did you grow up on?')
+    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    
+    security_a2 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    
+    security_q3 = SelectField('Security Question 3', choices=[
+        ('', 'Choose a question...'),
+        ('spouse_birthplace', 'Where was your spouse born?'),
+        ('favorite_color', 'What is your favorite color?'),
+        ('first_car', 'What was your first car model?'),
+        ('wedding_venue', 'Where did you get married?')
+    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    
+    security_a3 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    
+    submit = SubmitField('Update Security Questions', render_kw={'class': 'btn btn-info btn-lg'})

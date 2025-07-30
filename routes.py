@@ -1,10 +1,16 @@
 from datetime import datetime
 import random
+import os
+import json
+from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication
-from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm
+from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm
+
+# Profile blueprint for user profile management
+profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 
 main_bp = Blueprint('main', __name__)
 auth_bp = Blueprint('auth', __name__)
@@ -334,3 +340,134 @@ def volunteer(event_id):
             flash('Please fill out the volunteer application form.', 'danger')
     
     return redirect(url_for('events.detail', event_id=event_id))
+
+# Profile Management Routes
+@profile_bp.route('/')
+@login_required
+def settings():
+    """Main profile settings page"""
+    if current_user.user_type != 'elderly':
+        flash('Profile management is only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    return render_template('profile/settings.html')
+
+@profile_bp.route('/edit', methods=['GET', 'POST'])
+@login_required
+def edit():
+    """Edit basic profile information"""
+    if current_user.user_type != 'elderly':
+        flash('Profile editing is only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    form = ElderlyProfileForm()
+    
+    if form.validate_on_submit():
+        # Handle profile picture upload
+        if form.profile_picture.data:
+            file = form.profile_picture.data
+            filename = secure_filename(file.filename)
+            # Create unique filename to prevent conflicts
+            file_ext = filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
+            file_path = os.path.join('static', 'uploads', 'profile_pictures', unique_filename)
+            
+            # Save the file
+            file.save(file_path)
+            current_user.profile_picture = f"uploads/profile_pictures/{unique_filename}"
+        
+        # Update profile fields
+        current_user.full_name = form.full_name.data
+        current_user.language_preference = form.language_preference.data
+        current_user.event_interests = json.dumps(form.event_interests.data) if form.event_interests.data else None
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile.settings'))
+    
+    # Populate form with current user data
+    form.full_name.data = current_user.full_name
+    form.language_preference.data = current_user.language_preference
+    if current_user.event_interests:
+        try:
+            form.event_interests.data = json.loads(current_user.event_interests)
+        except:
+            form.event_interests.data = []
+    
+    return render_template('profile/edit.html', form=form)
+
+@profile_bp.route('/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Change user password"""
+    if current_user.user_type != 'elderly':
+        flash('Password change is only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        if current_user.check_password(form.current_password.data):
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('profile.settings'))
+        else:
+            flash('Current password is incorrect.', 'danger')
+    
+    return render_template('profile/password.html', form=form)
+
+@profile_bp.route('/security', methods=['GET', 'POST'])
+@login_required
+def security_questions():
+    """Update security questions"""
+    if current_user.user_type != 'elderly':
+        flash('Security questions are only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    form = SecurityQuestionsForm()
+    
+    if form.validate_on_submit():
+        current_user.security_q1 = form.security_q1.data
+        current_user.security_a1 = form.security_a1.data
+        current_user.security_q2 = form.security_q2.data
+        current_user.security_a2 = form.security_a2.data
+        current_user.security_q3 = form.security_q3.data
+        current_user.security_a3 = form.security_a3.data
+        
+        db.session.commit()
+        flash('Security questions updated successfully!', 'success')
+        return redirect(url_for('profile.settings'))
+    
+    # Populate form with current data
+    form.security_q1.data = current_user.security_q1
+    form.security_a1.data = current_user.security_a1
+    form.security_q2.data = current_user.security_q2
+    form.security_a2.data = current_user.security_a2
+    form.security_q3.data = current_user.security_q3
+    form.security_a3.data = current_user.security_a3
+    
+    return render_template('profile/security.html', form=form)
+
+@profile_bp.route('/delete-picture', methods=['POST'])
+@login_required
+def delete_picture():
+    """Delete profile picture"""
+    if current_user.user_type != 'elderly':
+        flash('Profile management is only available for elderly users.', 'warning')
+        return redirect(url_for('main.profile'))
+    
+    if current_user.profile_picture:
+        # Delete the file from filesystem
+        file_path = os.path.join('static', current_user.profile_picture)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Remove from database
+        current_user.profile_picture = None
+        db.session.commit()
+        flash('Profile picture removed successfully!', 'success')
+    else:
+        flash('No profile picture to delete.', 'warning')
+    
+    return redirect(url_for('profile.edit'))

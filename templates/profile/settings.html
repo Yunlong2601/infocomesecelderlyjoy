@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Profile Sidebar -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-cog me-2"></i>Profile Settings</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('profile.edit') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    <a href="{{ url_for('profile.change_password') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-lock me-2"></i>Change Password
+                    </a>
+                    <a href="{{ url_for('profile.security_questions') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>Security Questions
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Main Profile Content -->
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user me-2"></i>Your Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <!-- Profile Picture -->
+                            {% if current_user.profile_picture %}
+                                <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                                     alt="Profile Picture" 
+                                     class="img-fluid rounded-circle mb-3" 
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 150px; height: 150px;">
+                                    <i class="fas fa-user fa-4x text-white"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('profile.edit') }}" class="btn btn-primary">
+                                    <i class="fas fa-camera me-1"></i>Change Picture
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <!-- Profile Information -->
+                            <h5 class="mb-3">Profile Information</h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Full Name:</strong></div>
+                                <div class="col-sm-8">{{ current_user.full_name or 'Not set' }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>NRIC:</strong></div>
+                                <div class="col-sm-8">{{ current_user.nric }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Language:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if current_user.language_preference %}
+                                        {{ current_user.language_preference.title() }}
+                                    {% else %}
+                                        Not set
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Event Interests:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if current_user.event_interests %}
+                                        {% set interests = current_user.event_interests | from_json %}
+                                        {% if interests %}
+                                            {% for interest in interests %}
+                                                <span class="badge bg-info me-1">{{ interest.title() }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <em>None selected</em>
+                                        {% endif %}
+                                    {% else %}
+                                        <em>None selected</em>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4"><strong>Member Since:</strong></div>
+                                <div class="col-sm-8">{{ current_user.created_at.strftime('%B %d, %Y') }}</div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="d-grid gap-2 d-md-flex">
+                                <a href="{{ url_for('profile.edit') }}" class="btn btn-success">
+                                    <i class="fas fa-edit me-1"></i>Edit Profile
+                                </a>
+                                <a href="{{ url_for('main.profile') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

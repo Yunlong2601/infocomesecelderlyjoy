@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit me-2"></i>Edit Your Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Current Profile Picture -->
+                        <div class="text-center mb-4">
+                            {% if current_user.profile_picture %}
+                                <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                                     alt="Current Profile Picture" 
+                                     class="img-fluid rounded-circle mb-3" 
+                                     style="width: 120px; height: 120px; object-fit: cover;">
+                                
+                                <form method="POST" action="{{ url_for('profile.delete_picture') }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('Are you sure you want to remove your profile picture?')">
+                                        <i class="fas fa-trash me-1"></i>Remove Picture
+                                    </button>
+                                </form>
+                            {% else %}
+                                <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Profile Picture Upload -->
+                        <div class="mb-4">
+                            {{ form.profile_picture.label(class="form-label fs-5") }}
+                            {{ form.profile_picture() }}
+                            <small class="form-text text-muted">Choose a new profile picture (JPG, PNG, GIF only, max 5MB)</small>
+                            {% if form.profile_picture.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.profile_picture.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Full Name -->
+                        <div class="mb-4">
+                            {{ form.full_name.label(class="form-label fs-5") }}
+                            {{ form.full_name() }}
+                            {% if form.full_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.full_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Language Preference -->
+                        <div class="mb-4">
+                            {{ form.language_preference.label(class="form-label fs-5") }}
+                            {{ form.language_preference() }}
+                            {% if form.language_preference.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.language_preference.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Event Interests -->
+                        <div class="mb-4">
+                            {{ form.event_interests.label(class="form-label fs-5") }}
+                            <small class="form-text text-muted mb-2">Select the types of events you're interested in</small>
+                            
+                            <div class="row">
+                                {% for subfield in form.event_interests %}
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            {{ subfield(class="form-check-input") }}
+                                            {{ subfield.label(class="form-check-label") }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if form.event_interests.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.event_interests.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('profile.settings') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {{ form.submit() }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
