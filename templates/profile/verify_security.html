@@ -11,26 +11,26 @@
                     <h4><i class="fas fa-shield-alt me-2"></i>Security Verification Required</h4>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning border-2" style="font-size: 1.1rem;">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <strong>Security Check:</strong> To protect your account, please answer one of your security questions before updating your security settings.
                     </div>
                     
                     {% if attempts > 0 %}
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger border-2" style="font-size: 1.1rem;">
                         <i class="fas fa-times-circle me-2"></i>
                         <strong>Incorrect Answer:</strong> You have {{ 3 - attempts }} attempt(s) remaining.
                     </div>
                     {% endif %}
                     
-                    <div class="alert alert-info">
+                    <div class="alert alert-info border-2" style="font-size: 1.1rem;">
                         <i class="fas fa-question-circle me-2"></i>
                         <strong>Security Question:</strong>
                     </div>
 
-                    <div class="card bg-light mb-4">
-                        <div class="card-body">
-                            <h5 class="card-text text-center">{{ question }}</h5>
+                    <div class="card border-primary mb-4">
+                        <div class="card-body bg-primary bg-opacity-10">
+                            <h4 class="card-text text-center fw-bold text-dark" style="font-size: 1.5rem; line-height: 1.4;">{{ question }}</h4>
                         </div>
                     </div>
 
@@ -38,23 +38,23 @@
                         {{ form.hidden_tag() }}
                         
                         <div class="mb-4">
-                            {{ form.security_answer.label(class="form-label fs-5") }}
-                            {{ form.security_answer(placeholder="Enter your answer", autocomplete="off") }}
-                            <small class="form-text text-muted">Answer is case-insensitive</small>
+                            {{ form.security_answer.label(class="form-label fs-4 fw-bold text-dark") }}
+                            {{ form.security_answer(placeholder="Enter your answer", autocomplete="off", style="font-size: 1.2rem; padding: 0.75rem;") }}
+                            <small class="form-text text-dark fw-bold">Answer is case-insensitive</small>
                             {% if form.security_answer.errors %}
                                 <div class="text-danger">
                                     {% for error in form.security_answer.errors %}
-                                        <small>{{ error }}</small>
+                                        <small class="fw-bold">{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('profile.settings') }}" class="btn btn-outline-secondary">
+                            <a href="{{ url_for('profile.settings') }}" class="btn btn-outline-secondary btn-lg" style="font-size: 1.1rem;">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
-                            {{ form.submit(class="btn btn-warning btn-lg") }}
+                            {{ form.submit(class="btn btn-warning btn-lg", style="font-size: 1.1rem; font-weight: bold;") }}
                         </div>
                     </form>
 
