@@ -50,18 +50,40 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        # Try to find user by NRIC first (elderly users), then by username (organizers/volunteers)
-        user = User.query.filter_by(nric=form.nric.data).first()
-        if not user:
-            user = User.query.filter_by(username=form.nric.data).first()
+        login_identifier = form.nric.data.strip()
+        
+        # Check if it's an email (contains @) or NRIC/username
+        if '@' in login_identifier:
+            # Email login - find user by email
+            user = User.query.filter_by(email=login_identifier).first()
+        else:
+            # NRIC/username login - try NRIC first (elderly), then username (organizers/volunteers)
+            user = User.query.filter_by(nric=login_identifier).first()
+            if not user:
+                user = User.query.filter_by(username=login_identifier).first()
         
         if user and user.check_password(form.password.data):
-            login_user(user)
-            welcome_name = user.get_full_name() if user.user_type == 'elderly' else user.first_name
-            flash(f'Welcome back, {welcome_name}!', 'success')
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('main.index'))
-        flash('Invalid NRIC/Username or password', 'danger')
+            if user.user_type == 'elderly':
+                # For elderly users, use 2FA with security questions
+                session['pending_user_id'] = user.id
+                return redirect(url_for('auth.two_factor'))
+            else:
+                # For organizers and volunteers, use email 2FA
+                verification = EmailVerification.create_verification(
+                    user_id=user.id,
+                    email=user.email,
+                    purpose='login'
+                )
+                
+                if send_verification_email(user.email, verification.verification_code, 'login'):
+                    session['pending_user_id'] = user.id
+                    session['verification_id'] = verification.id
+                    flash('Please check your email for the verification code.', 'info')
+                    return redirect(url_for('auth.email_verification'))
+                else:
+                    flash('Failed to send verification email. Please try again.', 'danger')
+        else:
+            flash('Invalid email/NRIC or password. Please try again.', 'danger')
     
     return render_template('auth/login.html', form=form)
 

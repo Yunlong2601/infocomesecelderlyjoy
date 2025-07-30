@@ -6,7 +6,7 @@ from wtforms.widgets import TextArea, CheckboxInput, ListWidget
 from datetime import datetime
 
 class LoginForm(FlaskForm):
-    nric = StringField('NRIC', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., P1234567J'})
+    nric = StringField('EMAIL/NRIC', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter your email or NRIC'})
     password = PasswordField('Password', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary btn-lg w-100'})
 
