@@ -202,3 +202,12 @@ class RequestVerificationForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired(), Email()], 
                        render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter your email'})
     submit = SubmitField('Send Verification Code', render_kw={'class': 'btn btn-primary btn-lg w-100'})
+
+# Organizer Profile Forms
+class EditProfileForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    last_name = StringField('Last Name', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    email = StringField('Email', validators=[DataRequired(), Email()], render_kw={'class': 'form-control form-control-lg'})
+    phone = StringField('Phone Number', validators=[Optional(), Regexp(r'^\d{8}$', message="Phone number must be 8 digits")], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., 91234567'})
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png', 'gif'], 'Images only!')], render_kw={'class': 'form-control form-control-lg'})
+    submit = SubmitField('Update Profile', render_kw={'class': 'btn btn-primary btn-lg'})

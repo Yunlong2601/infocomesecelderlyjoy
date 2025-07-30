@@ -7,8 +7,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="fas fa-tachometer-alt text-primary me-2"></i>Organizer Dashboard</h2>
                 <div>
+                    <h2><i class="fas fa-tachometer-alt text-primary me-2"></i>Organizer Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back, {{ current_user.get_full_name() }}!</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('organizer.profile') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-user me-2"></i>My Profile
+                    </a>
                     <a href="{{ url_for('organizer.create_event') }}" class="btn btn-primary btn-lg">
                         <i class="fas fa-plus me-2"></i>Create New Event
                     </a>

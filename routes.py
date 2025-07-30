@@ -768,6 +768,105 @@ def dashboard():
                          total_participants=total_participants,
                          total_volunteers=total_volunteers)
 
+@organizer_bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    """Organizer profile management"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. This page is only for event organizers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    form = EditProfileForm()
+    
+    if form.validate_on_submit():
+        # Handle profile picture upload
+        if form.profile_picture.data:
+            file = form.profile_picture.data
+            if file.filename:
+                # Create uploads directory if it doesn't exist
+                upload_dir = os.path.join('static', 'uploads', 'profile_pictures')
+                os.makedirs(upload_dir, exist_ok=True)
+                
+                # Generate unique filename
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"{current_user.id}_{timestamp}.png"
+                file_path = os.path.join(upload_dir, filename)
+                
+                # Delete old profile picture if exists
+                if current_user.profile_picture:
+                    old_file_path = os.path.join('static', current_user.profile_picture)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                
+                # Save new picture
+                file.save(file_path)
+                current_user.profile_picture = f"uploads/profile_pictures/{filename}"
+        
+        # Update profile information
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.phone = form.phone.data
+        
+        # Update email if changed
+        if form.email.data != current_user.email:
+            current_user.email = form.email.data
+            current_user.username = form.email.data  # Update username to match email
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('organizer.profile'))
+    
+    # Pre-populate form with current data
+    form.first_name.data = current_user.first_name
+    form.last_name.data = current_user.last_name
+    form.email.data = current_user.email
+    form.phone.data = current_user.phone
+    
+    return render_template('organizer/profile.html', form=form, user=current_user)
+
+@organizer_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Change organizer password"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. This page is only for event organizers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if current_user.check_password(form.current_password.data):
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('organizer.profile'))
+        else:
+            flash('Current password is incorrect.', 'danger')
+    
+    return render_template('organizer/change_password.html', form=form)
+
+@organizer_bp.route('/delete-picture', methods=['POST'])
+@login_required
+def delete_picture():
+    """Delete organizer profile picture"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    if current_user.profile_picture:
+        # Delete the file from filesystem
+        file_path = os.path.join('static', current_user.profile_picture)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Remove from database
+        current_user.profile_picture = None
+        db.session.commit()
+        flash('Profile picture removed successfully!', 'success')
+    else:
+        flash('No profile picture to delete.', 'warning')
+    
+    return redirect(url_for('organizer.profile'))
+
 @organizer_bp.route('/create-event', methods=['GET', 'POST'])
 @login_required
 def create_event():
