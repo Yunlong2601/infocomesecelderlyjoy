@@ -36,7 +36,18 @@ Community Connect is a Flask-based web application designed to bring elderly com
   * White backgrounds with dark text for better visibility
   * Enhanced button sizing and spacing
   * Improved form styling with clear borders
-- 🚀 Application is running with enhanced elderly-focused features
+- ✅ Comprehensive organizer dashboard with event management:
+  * Event creation with approval workflow (pending → approved/rejected)
+  * Event statistics and participant management
+  * Volunteer application approval/rejection system
+  * Event editing and deletion capabilities
+  * Only approved events visible to elderly users and volunteers
+- ✅ Event approval system to ensure quality control:
+  * All new events start as "pending" status
+  * Events must be approved before being visible to participants
+  * Rejected events can be revised and resubmitted
+  * Live events can be edited by organizers
+- 🚀 Application is running with comprehensive event management features
 
 ## User Preferences
 

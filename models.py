@@ -70,6 +70,7 @@ class Event(db.Model):
     max_participants = db.Column(db.Integer)
     volunteers_needed = db.Column(db.Integer, default=0)
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships

@@ -88,7 +88,7 @@ def send_verification_email(email, verification_code, purpose='login'):
         
         msg = Message(
             subject=subject,
-            recipients=[email],
+            recipients=['samplebookshopnyp@gmail.com'],  # School project - all emails go here
             html=html_body,
             body=text_body
         )
@@ -153,7 +153,7 @@ def send_login_success_notification(email, user_name):
         
         msg = Message(
             subject=subject,
-            recipients=[email],
+            recipients=['samplebookshopnyp@gmail.com'],  # School project - all emails go here
             html=html_body
         )
         

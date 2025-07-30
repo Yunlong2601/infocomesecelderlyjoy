@@ -68,11 +68,12 @@ with app.app_context():
     db.create_all()
 
 # Import and register routes
-from routes import main_bp, auth_bp, events_bp, profile_bp
+from routes import main_bp, auth_bp, events_bp, profile_bp, organizer_bp
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(events_bp, url_prefix='/events')
 app.register_blueprint(profile_bp, url_prefix='/profile')
+app.register_blueprint(organizer_bp, url_prefix='/organizer')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Event - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3><i class="fas fa-edit text-primary me-2"></i>Edit Event: {{ event.title }}</h3>
+                        <a href="{{ url_for('organizer.event_detail', event_id=event.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Event
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if event.status == 'rejected' %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Event Rejected:</strong> This event was rejected and needs to be revised. Make the necessary changes and save to resubmit for approval.
+                        </div>
+                    {% elif event.status == 'approved' %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Live Event:</strong> This event is currently live and visible to participants. Changes will be applied immediately.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Pending Approval:</strong> This event is waiting for admin approval. You can make changes before it's reviewed.
+                        </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {{ form.title() }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.title.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.category.label(class="form-label") }}
+                                {{ form.category() }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.category.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description() }}
+                            <small class="form-text text-muted">Provide a detailed description of the event, activities, and what participants can expect.</small>
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.date.label(class="form-label") }}
+                                {{ form.date() }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.date.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.duration_hours.label(class="form-label") }}
+                                {{ form.duration_hours() }}
+                                <small class="form-text text-muted">Expected duration in hours</small>
+                                {% if form.duration_hours.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.duration_hours.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.location.label(class="form-label") }}
+                            {{ form.location() }}
+                            <small class="form-text text-muted">Include full address and any specific instructions for finding the venue</small>
+                            {% if form.location.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.location.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.max_participants.label(class="form-label") }}
+                                {{ form.max_participants() }}
+                                <small class="form-text text-muted">Leave blank for no limit</small>
+                                {% if form.max_participants.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.max_participants.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.volunteers_needed.label(class="form-label") }}
+                                {{ form.volunteers_needed() }}
+                                <small class="form-text text-muted">Number of volunteers needed to help with the event</small>
+                                {% if form.volunteers_needed.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.volunteers_needed.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('organizer.event_detail', event_id=event.id) }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {% if event.status == 'rejected' %}
+                                {{ form.submit(class="btn btn-warning btn-lg", value="Revise & Resubmit") }}
+                            {% else %}
+                                {{ form.submit(class="btn btn-primary btn-lg") }}
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().slice(0, 16);
+        dateInput.min = today;
+    }
+});
+</script>
+{% endblock %}

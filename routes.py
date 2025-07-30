@@ -16,11 +16,16 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 main_bp = Blueprint('main', __name__)
 auth_bp = Blueprint('auth', __name__)
 events_bp = Blueprint('events', __name__)
+organizer_bp = Blueprint('organizer', __name__, url_prefix='/organizer')
 
 # Main routes
 @main_bp.route('/')
 def index():
-    upcoming_events = Event.query.filter(Event.date >= datetime.utcnow()).order_by(Event.date).limit(6).all()
+    # Only show approved events to the public
+    upcoming_events = Event.query.filter(
+        Event.date >= datetime.utcnow(),
+        Event.status == 'approved'
+    ).order_by(Event.date).limit(6).all()
     return render_template('index.html', events=upcoming_events)
 
 @main_bp.route('/profile')
@@ -31,8 +36,7 @@ def profile():
         events = [rsvp.event for rsvp in rsvps]
         return render_template('profile.html', events=events, user_type='elderly')
     elif current_user.user_type == 'organizer':
-        events = Event.query.filter_by(organizer_id=current_user.id).all()
-        return render_template('profile.html', events=events, user_type='organizer')
+        return redirect(url_for('organizer.dashboard'))
     else:  # volunteer
         applications = VolunteerApplication.query.filter_by(volunteer_id=current_user.id).all()
         return render_template('profile.html', applications=applications, user_type='volunteer')
@@ -312,7 +316,8 @@ def list():
     category = request.args.get('category')
     search = request.args.get('search')
     
-    query = Event.query.filter(Event.date >= datetime.utcnow())
+    # Only show approved events to the public
+    query = Event.query.filter(Event.date >= datetime.utcnow(), Event.status == 'approved')
     
     if category:
         query = query.filter(Event.category == category)
@@ -663,3 +668,182 @@ def delete_picture():
         flash('No profile picture to delete.', 'warning')
     
     return redirect(url_for('profile.edit'))
+
+# Organizer Dashboard Routes
+@organizer_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """Organizer dashboard with event management"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Organizer dashboard is only for event organizers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get organizer's events with different statuses
+    pending_events = Event.query.filter_by(organizer_id=current_user.id, status='pending').order_by(Event.created_at.desc()).all()
+    approved_events = Event.query.filter_by(organizer_id=current_user.id, status='approved').order_by(Event.date).all()
+    rejected_events = Event.query.filter_by(organizer_id=current_user.id, status='rejected').order_by(Event.created_at.desc()).all()
+    
+    # Get statistics
+    total_events = Event.query.filter_by(organizer_id=current_user.id).count()
+    total_participants = db.session.query(db.func.count(EventRSVP.id)).join(Event).filter(Event.organizer_id == current_user.id, Event.status == 'approved').scalar() or 0
+    total_volunteers = db.session.query(db.func.count(VolunteerApplication.id)).join(Event).filter(Event.organizer_id == current_user.id, VolunteerApplication.status == 'approved').scalar() or 0
+    
+    return render_template('organizer/dashboard.html', 
+                         pending_events=pending_events,
+                         approved_events=approved_events,
+                         rejected_events=rejected_events,
+                         total_events=total_events,
+                         total_participants=total_participants,
+                         total_volunteers=total_volunteers)
+
+@organizer_bp.route('/create-event', methods=['GET', 'POST'])
+@login_required
+def create_event():
+    """Create a new event"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can create events.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    form = EventForm()
+    if form.validate_on_submit():
+        event = Event(
+            title=form.title.data,
+            description=form.description.data,
+            category=form.category.data,
+            date=form.date.data,
+            duration_hours=form.duration_hours.data,
+            location=form.location.data,
+            max_participants=form.max_participants.data,
+            volunteers_needed=form.volunteers_needed.data,
+            organizer_id=current_user.id,
+            status='pending'  # Events start as pending for approval
+        )
+        db.session.add(event)
+        db.session.commit()
+        flash('Event created successfully! It will be reviewed and approved before being visible to participants.', 'success')
+        return redirect(url_for('organizer.dashboard'))
+    
+    return render_template('organizer/create_event.html', form=form)
+
+@organizer_bp.route('/event/<int:event_id>')
+@login_required
+def event_detail(event_id):
+    """View detailed event information and manage participants/volunteers"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can view event details.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Ensure the organizer owns this event
+    if event.organizer_id != current_user.id:
+        flash('Access denied. You can only view your own events.', 'danger')
+        return redirect(url_for('organizer.dashboard'))
+    
+    # Get participants and volunteers
+    rsvps = EventRSVP.query.filter_by(event_id=event_id).all()
+    participants = [rsvp.user for rsvp in rsvps]
+    
+    volunteer_apps = VolunteerApplication.query.filter_by(event_id=event_id).all()
+    
+    return render_template('organizer/event_detail.html', 
+                         event=event, 
+                         participants=participants,
+                         volunteer_applications=volunteer_apps)
+
+@organizer_bp.route('/volunteer/<int:app_id>/approve', methods=['POST'])
+@login_required
+def approve_volunteer(app_id):
+    """Approve a volunteer application"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can manage volunteers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    app = VolunteerApplication.query.get_or_404(app_id)
+    
+    # Verify organizer owns the event
+    if app.event.organizer_id != current_user.id:
+        flash('Access denied. You can only manage volunteers for your own events.', 'danger')
+        return redirect(url_for('organizer.dashboard'))
+    
+    app.status = 'approved'
+    db.session.commit()
+    flash(f'Volunteer application from {app.volunteer.get_full_name()} has been approved!', 'success')
+    
+    return redirect(url_for('organizer.event_detail', event_id=app.event_id))
+
+@organizer_bp.route('/volunteer/<int:app_id>/reject', methods=['POST'])
+@login_required
+def reject_volunteer(app_id):
+    """Reject a volunteer application"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can manage volunteers.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    app = VolunteerApplication.query.get_or_404(app_id)
+    
+    # Verify organizer owns the event
+    if app.event.organizer_id != current_user.id:
+        flash('Access denied. You can only manage volunteers for your own events.', 'danger')
+        return redirect(url_for('organizer.dashboard'))
+    
+    app.status = 'rejected'
+    db.session.commit()
+    flash(f'Volunteer application from {app.volunteer.get_full_name()} has been rejected.', 'info')
+    
+    return redirect(url_for('organizer.event_detail', event_id=app.event_id))
+
+@organizer_bp.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    """Edit an existing event"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can edit events.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Ensure the organizer owns this event
+    if event.organizer_id != current_user.id:
+        flash('Access denied. You can only edit your own events.', 'danger')
+        return redirect(url_for('organizer.dashboard'))
+    
+    form = EventForm(obj=event)
+    if form.validate_on_submit():
+        form.populate_obj(event)
+        # Reset status to pending if event was previously rejected
+        if event.status == 'rejected':
+            event.status = 'pending'
+            flash('Event updated and resubmitted for approval!', 'success')
+        else:
+            flash('Event updated successfully!', 'success')
+        
+        db.session.commit()
+        return redirect(url_for('organizer.dashboard'))
+    
+    return render_template('organizer/edit_event.html', form=form, event=event)
+
+@organizer_bp.route('/event/<int:event_id>/delete', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    """Delete an event"""
+    if current_user.user_type != 'organizer':
+        flash('Access denied. Only organizers can delete events.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    event = Event.query.get_or_404(event_id)
+    
+    # Ensure the organizer owns this event
+    if event.organizer_id != current_user.id:
+        flash('Access denied. You can only delete your own events.', 'danger')
+        return redirect(url_for('organizer.dashboard'))
+    
+    # Delete related records first
+    EventRSVP.query.filter_by(event_id=event_id).delete()
+    VolunteerApplication.query.filter_by(event_id=event_id).delete()
+    
+    db.session.delete(event)
+    db.session.commit()
+    
+    flash('Event deleted successfully!', 'success')
+    return redirect(url_for('organizer.dashboard'))

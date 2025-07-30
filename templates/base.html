@@ -34,8 +34,8 @@
                     </li>
                     {% if current_user.is_authenticated and current_user.user_type == 'organizer' %}
                     <li class="nav-item">
-                        <a class="nav-link fs-5" href="{{ url_for('events.create') }}">
-                            <i class="fas fa-plus me-1"></i>Create Event
+                        <a class="nav-link fs-5" href="{{ url_for('organizer.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     {% endif %}
@@ -54,6 +54,10 @@
                             {% if current_user.user_type == 'elderly' %}
                             <li><a class="dropdown-item" href="{{ url_for('profile.settings') }}">
                                 <i class="fas fa-cog me-1"></i>Profile Settings
+                            </a></li>
+                            {% elif current_user.user_type == 'organizer' %}
+                            <li><a class="dropdown-item" href="{{ url_for('organizer.dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-1"></i>Organizer Dashboard
                             </a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
