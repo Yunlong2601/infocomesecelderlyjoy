@@ -151,13 +151,13 @@ def two_factor():
     
     # Randomly select one of the three security questions
     questions = [
-        (user.security_q1, user.security_a1, 'security_q1'),
-        (user.security_q2, user.security_a2, 'security_q2'), 
-        (user.security_q3, user.security_a3, 'security_q3')
+        (1, user.security_q1, user.security_a1),
+        (2, user.security_q2, user.security_a2), 
+        (3, user.security_q3, user.security_a3)
     ]
     
     # Filter out any empty questions
-    available_questions = [(q, a, key) for q, a, key in questions if q and a]
+    available_questions = [(num, q, a) for num, q, a in questions if q and a]
     
     if not available_questions:
         session.pop('pending_user_id', None)
@@ -165,12 +165,12 @@ def two_factor():
         return redirect(url_for('auth.login'))
     
     # Select a random question if not already selected
-    if 'selected_question' not in session:
-        selected_question, correct_answer, question_key = random.choice(available_questions)
+    if 'security_question_number' not in session:
+        question_number, selected_question, answer_hash = random.choice(available_questions)
+        session['security_question_number'] = question_number
         session['selected_question'] = selected_question
-        session['correct_answer'] = correct_answer
-        session['question_key'] = question_key
     else:
+        question_number = session['security_question_number']
         selected_question = session['selected_question']
     
     # Get human-readable question text
@@ -193,10 +193,11 @@ def two_factor():
     
     form = TwoFactorForm()
     if form.validate_on_submit():
-        user_answer = form.security_answer.data.lower().strip() if form.security_answer.data else ''
-        correct_answer = session.get('correct_answer', '').lower().strip() if session.get('correct_answer') else ''
+        # Use the new hashed security answer verification
+        question_number = session.get('security_question_number', 1)
+        user_answer = form.security_answer.data
         
-        if user_answer == correct_answer:
+        if user and user.check_security_answer(question_number, user_answer):
             # 2FA successful - log in the user with secure session
             login_user(user)
             session_manager.initialize_session(user.id)
@@ -306,11 +307,8 @@ def register():
                 language_preference=form.language_preference.data,
                 event_interests=','.join(form.event_interests.data) if form.event_interests.data else '',
                 security_q1=form.security_q1.data,
-                security_a1=form.security_a1.data.lower().strip() if form.security_a1.data else '',
                 security_q2=form.security_q2.data,
-                security_a2=form.security_a2.data.lower().strip() if form.security_a2.data else '',
                 security_q3=form.security_q3.data,
-                security_a3=form.security_a3.data.lower().strip() if form.security_a3.data else '',
                 user_type='elderly'
             )
         else:
@@ -337,6 +335,16 @@ def register():
             )
         
         user.set_password(form.password.data)
+        
+        # For elderly users, hash security answers and encrypt sensitive data
+        if user_type == 'elderly':
+            user.set_security_answers(
+                form.security_a1.data,
+                form.security_a2.data,
+                form.security_a3.data
+            )
+            user.encrypt_sensitive_data()
+        
         db.session.add(user)
         db.session.commit()
         

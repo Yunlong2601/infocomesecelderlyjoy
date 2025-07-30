@@ -56,38 +56,56 @@ class User(UserMixin, db.Model):
         """Encrypt sensitive user data using AES-256"""
         if self.nric:
             self.nric = encryption_manager.encrypt_data(self.nric)
-        if self.security_a1:
-            self.security_a1 = encryption_manager.encrypt_data(self.security_a1)
-        if self.security_a2:
-            self.security_a2 = encryption_manager.encrypt_data(self.security_a2)
-        if self.security_a3:
-            self.security_a3 = encryption_manager.encrypt_data(self.security_a3)
         if self.phone:
             self.phone = encryption_manager.encrypt_data(self.phone)
     
+    def set_security_answers(self, answer1, answer2, answer3):
+        """Hash and store security answers securely"""
+        if answer1:
+            self.security_a1 = generate_password_hash(answer1.lower().strip())
+        if answer2:
+            self.security_a2 = generate_password_hash(answer2.lower().strip())
+        if answer3:
+            self.security_a3 = generate_password_hash(answer3.lower().strip())
+    
+    def check_security_answer(self, answer_number, provided_answer):
+        """Check security answer against stored hash"""
+        if not provided_answer:
+            return False
+        
+        normalized_answer = provided_answer.lower().strip()
+        
+        if answer_number == 1 and self.security_a1:
+            return check_password_hash(self.security_a1, normalized_answer)
+        elif answer_number == 2 and self.security_a2:
+            return check_password_hash(self.security_a2, normalized_answer)
+        elif answer_number == 3 and self.security_a3:
+            return check_password_hash(self.security_a3, normalized_answer)
+        
+        return False
+    
     def decrypt_sensitive_data(self):
-        """Decrypt sensitive user data"""
+        """Decrypt sensitive user data (NRIC and phone only - answers are hashed)"""
         decrypted_data = {}
         try:
             if self.nric:
                 decrypted_data['nric'] = encryption_manager.decrypt_data(self.nric)
-            if self.security_a1:
-                decrypted_data['security_a1'] = encryption_manager.decrypt_data(self.security_a1)
-            if self.security_a2:
-                decrypted_data['security_a2'] = encryption_manager.decrypt_data(self.security_a2)
-            if self.security_a3:
-                decrypted_data['security_a3'] = encryption_manager.decrypt_data(self.security_a3)
             if self.phone:
                 decrypted_data['phone'] = encryption_manager.decrypt_data(self.phone)
         except Exception:
             # Data might not be encrypted yet
             decrypted_data = {
                 'nric': self.nric,
-                'security_a1': self.security_a1,
-                'security_a2': self.security_a2,
-                'security_a3': self.security_a3,
                 'phone': self.phone
             }
+        
+        # Security answers are hashed, not encrypted - never return them
+        decrypted_data.update({
+            'security_a1': '[HASHED]',
+            'security_a2': '[HASHED]', 
+            'security_a3': '[HASHED]'
+        })
+        
         return decrypted_data
     
     @classmethod
