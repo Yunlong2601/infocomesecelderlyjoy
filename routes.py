@@ -44,18 +44,11 @@ def login():
             user = User.query.filter_by(username=form.nric.data).first()
         
         if user and user.check_password(form.password.data):
-            # Check if elderly user needs 2FA
-            if user.user_type == 'elderly':
-                # Store user ID in session for 2FA verification
-                session['pending_user_id'] = user.id
-                return redirect(url_for('auth.two_factor'))
-            else:
-                # Non-elderly users login directly
-                login_user(user)
-                welcome_name = user.first_name
-                flash(f'Welcome back, {welcome_name}!', 'success')
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('main.index'))
+            login_user(user)
+            welcome_name = user.get_full_name() if user.user_type == 'elderly' else user.first_name
+            flash(f'Welcome back, {welcome_name}!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('main.index'))
         flash('Invalid NRIC/Username or password', 'danger')
     
     return render_template('auth/login.html', form=form)
