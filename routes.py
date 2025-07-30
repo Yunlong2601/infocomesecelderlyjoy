@@ -2,6 +2,7 @@ from datetime import datetime
 import random
 import os
 import json
+import re
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
@@ -151,6 +152,52 @@ def register():
         return redirect(url_for('main.index'))
     
     form = RegistrationForm()
+    
+    # Custom validation based on user type
+    if request.method == 'POST':
+        user_type = form.user_type.data
+        
+        # Add conditional validation based on user type
+        if user_type == 'elderly':
+            # Validate elderly-specific fields
+            if not form.nric.data or not form.nric.data.strip():
+                form.nric.errors.append('NRIC is required for elderly users.')
+            elif not re.match(r'^[STFG]\d{7}[A-Z]$', form.nric.data):
+                form.nric.errors.append('Please enter valid NRIC format (e.g., S1234567A)')
+            
+            if not form.full_name.data or not form.full_name.data.strip():
+                form.full_name.errors.append('Full name is required for elderly users.')
+            
+            if not form.language_preference.data:
+                form.language_preference.errors.append('Language preference is required for elderly users.')
+            
+            # Validate security questions
+            if not form.security_q1.data:
+                form.security_q1.errors.append('Security Question 1 is required.')
+            if not form.security_a1.data or not form.security_a1.data.strip():
+                form.security_a1.errors.append('Security Answer 1 is required.')
+            
+            if not form.security_q2.data:
+                form.security_q2.errors.append('Security Question 2 is required.')
+            if not form.security_a2.data or not form.security_a2.data.strip():
+                form.security_a2.errors.append('Security Answer 2 is required.')
+            
+            if not form.security_q3.data:
+                form.security_q3.errors.append('Security Question 3 is required.')
+            if not form.security_a3.data or not form.security_a3.data.strip():
+                form.security_a3.errors.append('Security Answer 3 is required.')
+                
+        elif user_type in ['organizer', 'volunteer']:
+            # Validate organizer/volunteer fields
+            if not form.first_name.data or not form.first_name.data.strip():
+                form.first_name.errors.append('First name is required for organizers and volunteers.')
+            if not form.last_name.data or not form.last_name.data.strip():
+                form.last_name.errors.append('Last name is required for organizers and volunteers.')
+            if not form.email.data or not form.email.data.strip():
+                form.email.errors.append('Email is required for organizers and volunteers.')
+            elif '@' not in form.email.data:
+                form.email.errors.append('Please enter a valid email address.')
+    
     if form.validate_on_submit():
         user_type = form.user_type.data
         

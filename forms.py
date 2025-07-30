@@ -21,22 +21,20 @@ class RegistrationForm(FlaskForm):
         ('volunteer', 'Volunteer Helper')
     ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
     
-    # Elderly-specific fields
-    nric = StringField('NRIC', validators=[
-        DataRequired(),
-        Regexp(r'^[STFG]\d{7}[A-Z]$', message='Please enter valid NRIC format (e.g., S1234567A)')
-    ], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., S1234567A'})
+    # Elderly-specific fields - conditionally required based on user_type
+    nric = StringField('NRIC', render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., S1234567A'})
     
-    full_name = StringField('Full Name', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    full_name = StringField('Full Name', render_kw={'class': 'form-control form-control-lg'})
     
     language_preference = SelectField('Language Preference', choices=[
+        ('', 'Choose a language...'),
         ('english', 'English'),
         ('mandarin', 'Mandarin'),
         ('malay', 'Malay'),
         ('tamil', 'Tamil'),
         ('hokkien', 'Hokkien'),
         ('cantonese', 'Cantonese')
-    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    ], render_kw={'class': 'form-select form-select-lg'})
     
     event_interests = MultiCheckboxField('Event Interests (Optional)', choices=[
         ('social', 'Social Gatherings (Tea sessions, community dinners)'),
@@ -46,16 +44,16 @@ class RegistrationForm(FlaskForm):
         ('health', 'Health & Wellness (Medical screenings, fitness classes)')
     ], validators=[Optional()])
     
-    # Security Questions for 2FA
+    # Security Questions for 2FA - conditionally required for elderly users
     security_q1 = SelectField('Security Question 1', choices=[
         ('', 'Choose a question...'),
         ('birthplace', 'What is your place of birth?'),
         ('school', 'What was the name of your primary school?'),
         ('mother_maiden', 'What is your mother\'s maiden name?'),
         ('first_pet', 'What was the name of your first pet?')
-    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    ], render_kw={'class': 'form-select form-select-lg'})
     
-    security_a1 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    security_a1 = StringField('Answer', render_kw={'class': 'form-control form-control-lg'})
     
     security_q2 = SelectField('Security Question 2', choices=[
         ('', 'Choose a question...'),
@@ -63,9 +61,9 @@ class RegistrationForm(FlaskForm):
         ('first_job', 'What was your first job?'),
         ('favorite_food', 'What is your favorite food?'),
         ('childhood_street', 'What street did you grow up on?')
-    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    ], render_kw={'class': 'form-select form-select-lg'})
     
-    security_a2 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    security_a2 = StringField('Answer', render_kw={'class': 'form-control form-control-lg'})
     
     security_q3 = SelectField('Security Question 3', choices=[
         ('', 'Choose a question...'),
@@ -73,14 +71,14 @@ class RegistrationForm(FlaskForm):
         ('favorite_color', 'What is your favorite color?'),
         ('first_car', 'What was your first car model?'),
         ('wedding_venue', 'Where did you get married?')
-    ], validators=[DataRequired()], render_kw={'class': 'form-select form-select-lg'})
+    ], render_kw={'class': 'form-select form-select-lg'})
     
-    security_a3 = StringField('Answer', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
+    security_a3 = StringField('Answer', render_kw={'class': 'form-control form-control-lg'})
     
-    # Organizer/Volunteer fields
-    first_name = StringField('First Name', validators=[Optional()], render_kw={'class': 'form-control form-control-lg'})
-    last_name = StringField('Last Name', validators=[Optional()], render_kw={'class': 'form-control form-control-lg'})
-    email = StringField('Email', validators=[Optional(), Email()], render_kw={'class': 'form-control form-control-lg'})
+    # Organizer/Volunteer fields - these will be conditionally required based on user_type
+    first_name = StringField('First Name', render_kw={'class': 'form-control form-control-lg'})
+    last_name = StringField('Last Name', render_kw={'class': 'form-control form-control-lg'})
+    email = StringField('Email', render_kw={'class': 'form-control form-control-lg'})
     phone = StringField('Phone Number', validators=[Optional()], render_kw={'class': 'form-control form-control-lg'})
     
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)], render_kw={'class': 'form-control form-control-lg'})
