@@ -25,6 +25,11 @@ Community Connect is a Flask-based web application designed to bring elderly com
     * Password confirmation for final verification
     * Failed attempt protection (3 attempts max)
     * Session-based security verification
+- ✅ Elderly-friendly light theme with enhanced readability:
+  * High contrast colors and larger fonts
+  * White backgrounds with dark text for better visibility
+  * Enhanced button sizing and spacing
+  * Improved form styling with clear borders
 - 🚀 Application is running with enhanced elderly-focused features
 
 ## User Preferences
