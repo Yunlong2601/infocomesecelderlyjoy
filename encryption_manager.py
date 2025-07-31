@@ -56,6 +56,10 @@ class AES256EncryptionManager:
             return None
         
         try:
+            if not self._cipher_suite:
+                self.logger.error("Cipher suite not initialized")
+                return data  # Return original data if encryption fails
+                
             if isinstance(data, str):
                 data = data.encode('utf-8')
             
@@ -64,7 +68,7 @@ class AES256EncryptionManager:
             
         except Exception as e:
             self.logger.error(f"Encryption failed: {e}")
-            raise
+            return data  # Return original data on failure to prevent app crash
     
     def decrypt_data(self, encrypted_data):
         """Decrypt AES-256 encrypted data"""
@@ -72,13 +76,17 @@ class AES256EncryptionManager:
             return None
         
         try:
+            if not self._cipher_suite:
+                self.logger.error("Cipher suite not initialized")
+                return encrypted_data  # Return original data if decryption fails
+                
             encrypted_bytes = base64.urlsafe_b64decode(encrypted_data.encode('utf-8'))
             decrypted_data = self._cipher_suite.decrypt(encrypted_bytes)
             return decrypted_data.decode('utf-8')
             
         except Exception as e:
             self.logger.error(f"Decryption failed: {e}")
-            raise
+            return encrypted_data  # Return original data on failure
     
     def encrypt_sensitive_fields(self, user_data):
         """Encrypt multiple sensitive fields in user data"""

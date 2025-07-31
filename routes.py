@@ -23,6 +23,7 @@ from security_enhancements import (
     SSRFPrevention, DataIntegrityValidation, SecurityMonitoring
 )
 from security_validator import OWASPSecurityValidator
+from enhanced_security_complete import SecurityMonitoring as EnhancedSecurityMonitoring
 from session_manager import session_manager
 from encryption_manager import encryption_manager
 
