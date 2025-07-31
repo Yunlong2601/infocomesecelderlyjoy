@@ -336,6 +336,23 @@ body {
     border: 2px solid #dee2e6;
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     background-color: #ffffff;
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+/* Ensure navbar dropdown has highest z-index */
+.navbar .dropdown-menu {
+    z-index: 10000 !important;
+}
+
+/* Fix navbar dropdown positioning */
+.navbar .nav-item.dropdown {
+    position: relative;
+    z-index: 1050;
+}
+
+.navbar .dropdown-toggle {
+    z-index: 1051;
 }
 
 .dropdown-item {

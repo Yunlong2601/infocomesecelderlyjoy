@@ -44,11 +44,11 @@
                 
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fs-5" href="#" role="button" data-bs-toggle="dropdown">
+                    <li class="nav-item dropdown" style="position: relative; z-index: 1050;">
+                        <a class="nav-link dropdown-toggle fs-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="z-index: 1051;">
                             <i class="fas fa-user me-1"></i>{{ current_user.get_full_name().split()[0] if current_user.user_type == 'elderly' else current_user.first_name }}
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end" style="z-index: 10000 !important; position: absolute !important;">
                             <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
                                 <i class="fas fa-user-circle me-1"></i>My Profile
                             </a></li>
