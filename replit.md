@@ -116,6 +116,12 @@ Community Connect is a Flask-based web application designed to bring elderly com
   * **Session Security Middleware**: Real-time session validation and hijacking prevention
   * **Cryptographic Key Management**: Secure encryption key generation and management
   * **Dual Protection System**: Encryption for retrievable data (NRIC/phone), hashing for verification-only data (security answers)
+- ✅ Role-specific homepage experiences (July 31, 2025):
+  * **Elderly Homepage**: Shows registered events and available events to join with easy-to-use interface
+  * **Volunteer Homepage**: Displays volunteer applications, events needing help, and impact statistics
+  * **Organizer Homepage**: Features quick event creation form, event management dashboard, and organizer statistics
+  * **Smart Routing**: Automatically shows appropriate homepage based on user type
+  * **Personalized Content**: Each homepage tailored to user needs and capabilities
 - 🚀 Application is running with enterprise-grade security protection against all OWASP Top 10 vulnerabilities, AES-256 encryption for sensitive data, comprehensive ORM-based SQL injection prevention, secure session management with automatic cleanup, and complete event management with intuitive role-based navigation
 
 ## User Preferences

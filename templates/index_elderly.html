@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-heart text-danger me-3"></i>
+                Welcome Back, {{ current_user.get_full_name().split()[0] }}!
+            </h1>
+            <p class="lead fs-3 mb-4">
+                Discover exciting events in your community. Join social gatherings, learn new skills, and make meaningful connections.
+            </p>
+            <div class="d-grid gap-3 d-md-flex">
+                <a href="{{ url_for('events.list') }}" class="btn btn-lg px-4 shadow" 
+                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          border: none; color: white; font-weight: 600; 
+                          text-decoration: none; transition: all 0.3s ease;"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102,126,234,0.4)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'">
+                    <i class="fas fa-calendar me-2"></i>Browse All Events
+                </a>
+                <a href="{{ url_for('main.profile') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
+                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
+                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
+                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
+                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
+                    <i class="fas fa-user-circle me-2"></i>My Profile
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center">
+            <div class="position-relative">
+                <div class="d-inline-block" style="animation: float 3s ease-in-out infinite;">
+                    <i class="fas fa-users" style="font-size: 6rem; color: rgba(255,255,255,0.8); text-shadow: 2px 2px 8px rgba(0,0,0,0.3);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Registered Events Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-primary">
+                <i class="fas fa-ticket-alt me-2"></i>My Registered Events
+            </h2>
+            <a href="{{ url_for('events.list') }}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-2"></i>Find More Events
+            </a>
+        </div>
+        
+        {% if user_events %}
+            <div class="row">
+                {% for event in user_events %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success">Registered</span>
+                            <small class="text-muted">{{ event.date.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-primary fw-bold">{{ event.title }}</h5>
+                            <p class="card-text">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}
+                                </small>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' if event.category == 'educational' else 'warning' }}">
+                                    {{ event.category.title() }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('events.detail', id=event.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Registered Events Yet</h4>
+                <p class="text-muted">Start exploring events to join your community!</p>
+                <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-search me-2"></i>Browse Events
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upcoming Events to Join -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="fw-bold text-success mb-4">
+            <i class="fas fa-calendar-plus me-2"></i>Upcoming Events You Can Join
+        </h2>
+        
+        {% if upcoming_events %}
+            <div class="row">
+                {% for event in upcoming_events %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info">Available</span>
+                            <small class="text-muted">{{ event.date.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-success fw-bold">{{ event.title }}</h5>
+                            <p class="card-text">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}
+                                </small>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' if event.category == 'educational' else 'warning' }}">
+                                    {{ event.category.title() }}
+                                </span>
+                                {% if event.max_participants %}
+                                <small class="text-muted ms-2">
+                                    <i class="fas fa-users me-1"></i>{{ event.get_rsvp_count() }}/{{ event.max_participants }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('events.detail', id=event.id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus me-1"></i>Join Event
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No upcoming events available at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

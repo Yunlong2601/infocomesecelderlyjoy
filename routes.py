@@ -38,7 +38,80 @@ organizer_bp = Blueprint('organizer', __name__, url_prefix='/organizer')
 # Main routes
 @main_bp.route('/')
 def index():
-    # Only show approved events to the public
+    if current_user.is_authenticated:
+        if current_user.user_type == 'elderly':
+            # Get elderly user's registered events
+            user_events = []
+            rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
+            user_events = [rsvp.event for rsvp in rsvps if rsvp.event.status == 'approved']
+            
+            # Get upcoming events they can join (not already registered)
+            registered_event_ids = [event.id for event in user_events]
+            upcoming_events = Event.query.filter(
+                Event.date >= datetime.utcnow(),
+                Event.status == 'approved',
+                ~Event.id.in_(registered_event_ids) if registered_event_ids else True
+            ).order_by(Event.date).limit(6).all()
+            
+            return render_template('index_elderly.html', 
+                                 user_events=user_events, 
+                                 upcoming_events=upcoming_events)
+        
+        elif current_user.user_type == 'volunteer':
+            # Get volunteer's applications
+            volunteer_applications = VolunteerApplication.query.filter_by(
+                user_id=current_user.id
+            ).order_by(VolunteerApplication.applied_at.desc()).limit(6).all()
+            
+            # Get events needing volunteers (excluding ones they already applied to)
+            applied_event_ids = [app.event_id for app in volunteer_applications]
+            events_needing_volunteers = Event.query.filter(
+                Event.date >= datetime.utcnow(),
+                Event.status == 'approved',
+                Event.volunteers_needed > 0,
+                ~Event.id.in_(applied_event_ids) if applied_event_ids else True
+            ).order_by(Event.date).limit(6).all()
+            
+            # Calculate volunteer stats
+            volunteer_stats = {
+                'total_applications': len(volunteer_applications),
+                'approved_applications': len([app for app in volunteer_applications if app.status == 'approved']),
+                'people_helped': len([app for app in volunteer_applications if app.status == 'approved' and app.event.date < datetime.utcnow()])
+            }
+            
+            return render_template('index_volunteer.html',
+                                 volunteer_applications=volunteer_applications,
+                                 events_needing_volunteers=events_needing_volunteers,
+                                 volunteer_stats=volunteer_stats)
+        
+        elif current_user.user_type == 'organizer':
+            from forms import EventForm
+            
+            # Get organizer's events
+            recent_events = Event.query.filter_by(
+                organizer_id=current_user.id
+            ).order_by(Event.created_at.desc()).limit(6).all()
+            
+            # Calculate organizer stats
+            organizer_stats = {
+                'total_events': Event.query.filter_by(organizer_id=current_user.id).count(),
+                'approved_events': Event.query.filter_by(organizer_id=current_user.id, status='approved').count(),
+                'pending_events': Event.query.filter_by(organizer_id=current_user.id, status='pending').count(),
+                'total_participants': sum([event.get_rsvp_count() for event in recent_events])
+            }
+            
+            # Quick event creation form
+            quick_form = EventForm()
+            
+            return render_template('index_organizer.html',
+                                 recent_events=recent_events,
+                                 organizer_stats=organizer_stats,
+                                 quick_form=quick_form)
+        
+        elif current_user.user_type == 'admin':
+            return redirect(url_for('admin.dashboard'))
+    
+    # Default for non-authenticated users
     upcoming_events = Event.query.filter(
         Event.date >= datetime.utcnow(),
         Event.status == 'approved'

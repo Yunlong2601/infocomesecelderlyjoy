@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-calendar-plus text-info me-3"></i>
+                Welcome, {{ current_user.first_name }}!
+            </h1>
+            <p class="lead fs-3 mb-4">
+                Create meaningful events that bring your community together. Plan activities that make a difference in elderly lives.
+            </p>
+            <div class="d-grid gap-3 d-md-flex">
+                <a href="{{ url_for('organizer.create_event') }}" class="btn btn-lg px-4 shadow" 
+                   style="background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%); 
+                          border: none; color: white; font-weight: 600; 
+                          text-decoration: none; transition: all 0.3s ease;"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(23,162,184,0.4)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'">
+                    <i class="fas fa-plus me-2"></i>Create New Event
+                </a>
+                <a href="{{ url_for('organizer.dashboard') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
+                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
+                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
+                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
+                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
+                    <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center">
+            <div class="position-relative">
+                <div class="d-inline-block" style="animation: float 3s ease-in-out infinite;">
+                    <i class="fas fa-calendar-alt" style="font-size: 6rem; color: rgba(255,255,255,0.8); text-shadow: 2px 2px 8px rgba(0,0,0,0.3);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Event Creation Form -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-info text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-rocket me-2"></i>Quick Event Creation
+                </h3>
+                <p class="mb-0 mt-2 opacity-75">Get started quickly with our streamlined event creation process</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('organizer.create_event') }}">
+                    {{ quick_form.hidden_tag() }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="title" class="form-label fs-5 fw-bold text-primary">Event Title</label>
+                            {{ quick_form.title(class="form-control form-control-lg", placeholder="e.g., Community Lunch & Social Hour") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label fs-5 fw-bold text-primary">Category</label>
+                            {{ quick_form.category(class="form-select form-select-lg") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label fs-5 fw-bold text-primary">Date & Time</label>
+                            {{ quick_form.date(class="form-control form-control-lg") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="location" class="form-label fs-5 fw-bold text-primary">Location</label>
+                            {{ quick_form.location(class="form-control form-control-lg", placeholder="e.g., Community Center, Main Hall") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label fs-5 fw-bold text-primary">Description</label>
+                        {{ quick_form.description(class="form-control", rows="4", placeholder="Describe your event, what participants can expect, and any special requirements...") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="max_participants" class="form-label fs-5 fw-bold text-primary">Max Participants</label>
+                            {{ quick_form.max_participants(class="form-control form-control-lg", placeholder="e.g., 20") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="volunteers_needed" class="form-label fs-5 fw-bold text-primary">Volunteers Needed</label>
+                            {{ quick_form.volunteers_needed(class="form-control form-control-lg", placeholder="e.g., 3") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="duration_hours" class="form-label fs-5 fw-bold text-primary">Duration (Hours)</label>
+                            {{ quick_form.duration_hours(class="form-control form-control-lg", placeholder="e.g., 2") }}
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-info btn-lg px-5 shadow">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Event for Approval
+                        </button>
+                        <p class="text-muted mt-2 mb-0">
+                            <small><i class="fas fa-info-circle me-1"></i>Your event will be reviewed by administrators before being published</small>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Events Dashboard -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="fw-bold text-primary mb-4">
+            <i class="fas fa-list me-2"></i>My Events Overview
+        </h2>
+        
+        <!-- Event Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center h-100 bg-primary text-white">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                        <h3>{{ organizer_stats.total_events or 0 }}</h3>
+                        <p class="mb-0">Total Events</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100 bg-success text-white">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h3>{{ organizer_stats.approved_events or 0 }}</h3>
+                        <p class="mb-0">Approved</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100 bg-warning text-white">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-3x mb-3"></i>
+                        <h3>{{ organizer_stats.pending_events or 0 }}</h3>
+                        <p class="mb-0">Pending Review</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center h-100 bg-info text-white">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <h3>{{ organizer_stats.total_participants or 0 }}</h3>
+                        <p class="mb-0">Total Participants</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Events -->
+        {% if recent_events %}
+            <h3 class="fw-bold text-secondary mb-3">Recent Events</h3>
+            <div class="row">
+                {% for event in recent_events %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ 'success' if event.status == 'approved' else 'warning' if event.status == 'pending' else 'danger' }}">
+                                {{ event.status.title() }}
+                            </span>
+                            <small class="text-muted">{{ event.date.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-primary fw-bold">{{ event.title }}</h5>
+                            <p class="card-text">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ event.location }}
+                                </small>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' if event.category == 'educational' else 'warning' }}">
+                                    {{ event.category.title() }}
+                                </span>
+                                {% if event.max_participants %}
+                                <small class="text-muted ms-2">
+                                    <i class="fas fa-users me-1"></i>{{ event.get_rsvp_count() }}/{{ event.max_participants }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('organizer.event_detail', id=event.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Manage Event
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Events Created Yet</h4>
+                <p class="text-muted">Start creating events to bring your community together!</p>
+                <a href="{{ url_for('organizer.create_event') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create Your First Event
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tips for Organizers -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4 class="text-primary mb-3">
+                    <i class="fas fa-lightbulb me-2"></i>Tips for Successful Events
+                </h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="fw-bold text-success"><i class="fas fa-users me-1"></i>Inclusive Planning</h6>
+                        <p class="small text-muted">Consider accessibility needs and diverse interests when planning activities.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold text-info"><i class="fas fa-clock me-1"></i>Timing Matters</h6>
+                        <p class="small text-muted">Schedule events during convenient times for elderly participants (mornings/early afternoons).</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold text-warning"><i class="fas fa-hands-helping me-1"></i>Volunteer Support</h6>
+                        <p class="small text-muted">Request adequate volunteers to ensure participants feel supported and engaged.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
