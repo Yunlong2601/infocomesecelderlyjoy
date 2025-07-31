@@ -179,8 +179,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.05);
     border-radius: 20px;
     z-index: 1;
 }
