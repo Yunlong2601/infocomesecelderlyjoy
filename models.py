@@ -120,27 +120,33 @@ class User(UserMixin, db.Model):
     
     @classmethod
     def safe_query_by_nric(cls, nric_value):
-        """Safely query user by NRIC - handles encrypted NRIC values"""
+        """Safely query user by NRIC - temporarily using direct match for debugging"""
         import re
-        from encryption_manager import encryption_manager
         
         # Check if it looks like an NRIC format
         if not re.match(r'^[STFG]\d{7}[A-Z]$', nric_value):
             return None
             
-        # Get all elderly users and check their decrypted NRIC values
-        elderly_users = cls.query.filter_by(user_type='elderly').all()
-        for user in elderly_users:
-            if user.nric:
-                try:
-                    decrypted_nric = encryption_manager.decrypt_data(user.nric)
-                    if decrypted_nric == nric_value:
-                        return user
-                except Exception:
-                    # Skip if decryption fails (might be unencrypted old data)
-                    if user.nric == nric_value:
-                        return user
-                    continue
+        # First try direct match (for unencrypted data)
+        user = cls.query.filter(cls.nric == nric_value).first()
+        if user:
+            return user
+            
+        # If no direct match found, try decrypting encrypted values
+        try:
+            from encryption_manager import encryption_manager
+            elderly_users = cls.query.filter_by(user_type='elderly').all()
+            for user in elderly_users:
+                if user.nric and len(user.nric) > 20:  # Likely encrypted
+                    try:
+                        decrypted_nric = encryption_manager.decrypt_data(user.nric)
+                        if decrypted_nric == nric_value:
+                            return user
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+            
         return None
     
     @classmethod

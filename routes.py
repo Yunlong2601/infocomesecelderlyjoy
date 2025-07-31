@@ -449,7 +449,8 @@ def register():
                 form.security_a2.data,
                 form.security_a3.data
             )
-            user.encrypt_sensitive_data()
+            # Temporarily disable encryption for debugging
+            # user.encrypt_sensitive_data()
         
         db.session.add(user)
         db.session.commit()
