@@ -8,6 +8,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from enhanced_security_complete import initialize_complete_security
 
 # Configure enhanced security logging
 logging.basicConfig(
@@ -160,6 +161,13 @@ with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401
     db.create_all()
+
+# Initialize complete security system
+try:
+    app = initialize_complete_security(app)
+except Exception as e:
+    logging.warning(f"Enhanced security initialization failed: {e}")
+    # Continue with basic security
 
 # Import and register routes
 from routes import main_bp, auth_bp, events_bp, profile_bp, organizer_bp, volunteer_bp, admin_bp
