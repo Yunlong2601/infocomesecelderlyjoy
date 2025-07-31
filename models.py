@@ -54,10 +54,20 @@ class User(UserMixin, db.Model):
     
     def encrypt_sensitive_data(self):
         """Encrypt sensitive user data using AES-256"""
-        if self.nric:
+        if self.nric and not self.is_encrypted(self.nric):
             self.nric = encryption_manager.encrypt_data(self.nric)
-        if self.phone:
+        if self.phone and not self.is_encrypted(self.phone):
             self.phone = encryption_manager.encrypt_data(self.phone)
+    
+    def is_encrypted(self, data):
+        """Check if data is already encrypted"""
+        try:
+            # Try to decode as base64 - encrypted data will be base64 encoded
+            import base64
+            base64.b64decode(data)
+            return len(data) > 20  # Encrypted data is longer
+        except:
+            return False
     
     def set_security_answers(self, answer1, answer2, answer3):
         """Hash and store security answers securely"""
