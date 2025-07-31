@@ -60,6 +60,19 @@ body {
 }
 }
 
+/* Enhanced event cards for better visibility */
+.card {
+    border: 2px solid #dee2e6 !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    border-color: #667eea !important;
+}
+
 /* Modern button styling with gradients and animations */
 .btn-lg {
     font-size: 1.3rem;

@@ -16,17 +16,22 @@
 </div>
 
 <!-- Search and Filter -->
-<div class="card mb-4">
-    <div class="card-body">
+<div class="card mb-4 shadow-sm" style="background: white; border: 2px solid #dee2e6;">
+    <div class="card-body p-4">
+        <h4 class="mb-3" style="color: #495057; font-weight: 600;">
+            <i class="fas fa-search text-primary me-2"></i>Find Events
+        </h4>
         <form method="GET" class="row g-3">
             <div class="col-md-6">
-                <label for="search" class="form-label fs-5">Search Events</label>
+                <label for="search" class="form-label fs-5 fw-bold" style="color: #495057;">Search Events</label>
                 <input type="text" class="form-control form-control-lg" id="search" name="search" 
-                       value="{{ request.args.get('search', '') }}" placeholder="Search by title or description">
+                       value="{{ request.args.get('search', '') }}" placeholder="Search by title or description"
+                       style="border: 2px solid #ced4da; font-size: 1.2rem;">
             </div>
             <div class="col-md-4">
-                <label for="category" class="form-label fs-5">Category</label>
-                <select class="form-select form-select-lg" id="category" name="category">
+                <label for="category" class="form-label fs-5 fw-bold" style="color: #495057;">Category</label>
+                <select class="form-select form-select-lg" id="category" name="category"
+                        style="border: 2px solid #ced4da; font-size: 1.2rem;">
                     <option value="">All Categories</option>
                     <option value="social" {% if request.args.get('category') == 'social' %}selected{% endif %}>Social Gathering</option>
                     <option value="recreational" {% if request.args.get('category') == 'recreational' %}selected{% endif %}>Recreational Activity</option>
@@ -34,7 +39,7 @@
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary btn-lg w-100">
+                <button type="submit" class="btn btn-primary btn-lg w-100" style="font-size: 1.2rem; padding: 12px;">
                     <i class="fas fa-search me-1"></i>Search
                 </button>
             </div>
@@ -46,55 +51,67 @@
 <div class="row">
     {% for event in events %}
     <div class="col-lg-6 col-xl-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
+        <div class="card h-100 shadow-sm border-2" style="background: white; transition: all 0.3s ease;">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' }} fs-6">
+                    <span class="badge bg-{{ 'primary' if event.category == 'social' else 'success' if event.category == 'recreational' else 'info' }}" 
+                          style="font-size: 1rem; padding: 8px 12px;">
                         <i class="fas fa-{{ 'users' if event.category == 'social' else 'running' if event.category == 'recreational' else 'graduation-cap' }} me-1"></i>
                         {{ event.category.title() }}
                     </span>
-                    <small class="text-muted">
+                    <span class="badge bg-warning text-dark" style="font-size: 1rem; padding: 8px 12px;">
                         <i class="fas fa-calendar me-1"></i>
                         {{ event.date.strftime('%b %d') }}
-                    </small>
+                    </span>
                 </div>
                 
-                <h5 class="card-title fs-4 mb-3">{{ event.title }}</h5>
+                <h5 class="card-title mb-3" style="color: #495057; font-size: 1.4rem; font-weight: 700; line-height: 1.3;">{{ event.title }}</h5>
                 
-                <div class="mb-2">
-                    <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                    <span class="fs-5">{{ event.location }}</span>
+                <div class="mb-3" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                    <i class="fas fa-map-marker-alt text-danger me-2" style="font-size: 1.1rem;"></i>
+                    <span style="font-size: 1.1rem; color: #495057; font-weight: 600;">{{ event.location }}</span>
                 </div>
                 
-                <div class="mb-2">
-                    <i class="fas fa-clock text-info me-2"></i>
-                    <span class="fs-5">{{ event.date.strftime('%I:%M %p') }} ({{ event.duration_hours }}h)</span>
+                <div class="mb-3" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                    <i class="fas fa-clock text-info me-2" style="font-size: 1.1rem;"></i>
+                    <span style="font-size: 1.1rem; color: #495057; font-weight: 600;">{{ event.date.strftime('%I:%M %p') }} ({{ event.duration_hours }}h)</span>
                 </div>
                 
-                <div class="mb-3">
-                    <i class="fas fa-user-tie text-secondary me-2"></i>
-                    <span class="fs-5">{{ event.organizer.get_full_name() }}</span>
+                <div class="mb-3" style="background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #6c757d;">
+                    <i class="fas fa-user-tie text-secondary me-2" style="font-size: 1.1rem;"></i>
+                    <span style="font-size: 1.1rem; color: #495057; font-weight: 600;">{{ event.organizer.get_full_name() }}</span>
                 </div>
                 
                 {% if event.description %}
-                <p class="card-text text-muted">
-                    {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
-                </p>
+                <div class="mb-3" style="background: #e9ecef; padding: 12px; border-radius: 8px;">
+                    <p style="color: #495057; font-size: 1rem; line-height: 1.6; margin-bottom: 0;">
+                        {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
+                    </p>
+                </div>
                 {% endif %}
                 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <small class="text-muted">
-                        <i class="fas fa-users me-1"></i>
-                        {{ event.get_rsvp_count() }} attending
-                        {% if event.max_participants %}
-                        / {{ event.max_participants }} max
-                        {% endif %}
-                    </small>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="text-center p-2" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 8px;">
+                            <i class="fas fa-users text-primary" style="font-size: 1.2rem;"></i>
+                            <div style="font-size: 1rem; font-weight: 600; color: #495057;">
+                                {{ event.get_rsvp_count() }} attending
+                                {% if event.max_participants %}
+                                <br><small>/ {{ event.max_participants }} max</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                     {% if event.volunteers_needed > 0 %}
-                    <small class="text-muted">
-                        <i class="fas fa-hands-helping me-1"></i>
-                        {{ event.get_volunteer_count() }}/{{ event.volunteers_needed }} volunteers
-                    </small>
+                    <div class="col-6">
+                        <div class="text-center p-2" style="background: linear-gradient(135deg, #e8f5e8, #c8e6c9); border-radius: 8px;">
+                            <i class="fas fa-hands-helping text-success" style="font-size: 1.2rem;"></i>
+                            <div style="font-size: 1rem; font-weight: 600; color: #495057;">
+                                {{ event.get_volunteer_count() }}/{{ event.volunteers_needed }}
+                                <br><small>volunteers</small>
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
                 
