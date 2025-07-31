@@ -324,62 +324,77 @@ def register():
         if user_type == 'elderly':
             # Validate elderly-specific fields
             if not form.nric.data or not form.nric.data.strip():
-                form.nric.errors = list(form.nric.errors)
+                if not hasattr(form.nric.errors, 'append'):
+                    form.nric.errors = []
                 form.nric.errors.append('NRIC is required for elderly users.')
             elif not re.match(r'^[STFG]\d{7}[A-Z]$', form.nric.data):
-                form.nric.errors = list(form.nric.errors)
+                if not hasattr(form.nric.errors, 'append'):
+                    form.nric.errors = []
                 form.nric.errors.append('Please enter valid NRIC format (e.g., S1234567A)')
             
             if not form.full_name.data or not form.full_name.data.strip():
-                form.full_name.errors = list(form.full_name.errors)
+                if not hasattr(form.full_name.errors, 'append'):
+                    form.full_name.errors = []
                 form.full_name.errors.append('Full name is required for elderly users.')
             
             # Additional security validation for elderly registration (OWASP #3 Injection)
             if form.full_name.data:
                 sanitized_name = OWASPSecurityValidator.sanitize_sql_input(form.full_name.data)
                 if sanitized_name != form.full_name.data:
-                    form.full_name.errors = list(form.full_name.errors)
+                    if not hasattr(form.full_name.errors, 'append'):
+                        form.full_name.errors = []
                     form.full_name.errors.append('Invalid characters detected in name.')
             
             if not form.language_preference.data:
-                form.language_preference.errors = list(form.language_preference.errors)
+                if not hasattr(form.language_preference.errors, 'append'):
+                    form.language_preference.errors = []
                 form.language_preference.errors.append('Language preference is required for elderly users.')
             
             # Validate security questions
             if not form.security_q1.data:
-                form.security_q1.errors = list(form.security_q1.errors)
+                if not hasattr(form.security_q1.errors, 'append'):
+                    form.security_q1.errors = []
                 form.security_q1.errors.append('Security Question 1 is required.')
             if not form.security_a1.data or not form.security_a1.data.strip():
-                form.security_a1.errors = list(form.security_a1.errors)
+                if not hasattr(form.security_a1.errors, 'append'):
+                    form.security_a1.errors = []
                 form.security_a1.errors.append('Security Answer 1 is required.')
             
             if not form.security_q2.data:
-                form.security_q2.errors = list(form.security_q2.errors)
+                if not hasattr(form.security_q2.errors, 'append'):
+                    form.security_q2.errors = []
                 form.security_q2.errors.append('Security Question 2 is required.')
             if not form.security_a2.data or not form.security_a2.data.strip():
-                form.security_a2.errors = list(form.security_a2.errors)
+                if not hasattr(form.security_a2.errors, 'append'):
+                    form.security_a2.errors = []
                 form.security_a2.errors.append('Security Answer 2 is required.')
             
             if not form.security_q3.data:
-                form.security_q3.errors = list(form.security_q3.errors)
+                if not hasattr(form.security_q3.errors, 'append'):
+                    form.security_q3.errors = []
                 form.security_q3.errors.append('Security Question 3 is required.')
             if not form.security_a3.data or not form.security_a3.data.strip():
-                form.security_a3.errors = list(form.security_a3.errors)
+                if not hasattr(form.security_a3.errors, 'append'):
+                    form.security_a3.errors = []
                 form.security_a3.errors.append('Security Answer 3 is required.')
                 
         elif user_type in ['organizer', 'volunteer']:
             # Validate organizer/volunteer fields
             if not form.first_name.data or not form.first_name.data.strip():
-                form.first_name.errors = list(form.first_name.errors)
+                if not hasattr(form.first_name.errors, 'append'):
+                    form.first_name.errors = []
                 form.first_name.errors.append('First name is required for organizers and volunteers.')
             if not form.last_name.data or not form.last_name.data.strip():
-                form.last_name.errors = list(form.last_name.errors)
+                if not hasattr(form.last_name.errors, 'append'):
+                    form.last_name.errors = []
                 form.last_name.errors.append('Last name is required for organizers and volunteers.')
             if not form.email.data or not form.email.data.strip():
-                form.email.errors = list(form.email.errors)
+                if not hasattr(form.email.errors, 'append'):
+                    form.email.errors = []
                 form.email.errors.append('Email is required for organizers and volunteers.')
             elif '@' not in form.email.data:
-                form.email.errors = list(form.email.errors)
+                if not hasattr(form.email.errors, 'append'):
+                    form.email.errors = []
                 form.email.errors.append('Please enter a valid email address.')
     
     if form.validate_on_submit():
