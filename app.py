@@ -142,15 +142,21 @@ def set_security_headers(response):
     if app.config.get('ENV') == 'production':
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     
-    # Content Security Policy
+    # Enhanced Content Security Policy with HSTS
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com; "
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com https://fonts.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.replit.com https://fonts.googleapis.com; "
         "img-src 'self' data: https:; "
-        "font-src 'self' https://cdn.jsdelivr.net https://cdn.replit.com; "
-        "connect-src 'self';"
+        "font-src 'self' https://cdn.jsdelivr.net https://cdn.replit.com https://fonts.googleapis.com https://fonts.gstatic.com; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self';"
     )
+    
+    # HSTS Header for HTTPS enforcement
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
     
     # Referrer policy
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'

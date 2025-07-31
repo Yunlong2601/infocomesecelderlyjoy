@@ -1,9 +1,17 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, DateTimeField, IntegerField, SubmitField, SelectMultipleField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, Regexp
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, Regexp, ValidationError
 from wtforms.widgets import TextArea, CheckboxInput, ListWidget
 from datetime import datetime
+
+# Enhanced Security Feature 1: Input Length Validation
+def validate_input_length(field_name, max_length):
+    """Custom validator for input length limits - prevents DoS attacks through large inputs"""
+    def _validate_length(form, field):
+        if field.data and len(str(field.data)) > max_length:
+            raise ValidationError(f'{field_name} must be less than {max_length} characters')
+    return _validate_length
 
 class LoginForm(FlaskForm):
     nric = StringField('EMAIL/NRIC', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter your email or NRIC'})
@@ -24,7 +32,7 @@ class RegistrationForm(FlaskForm):
     # Elderly-specific fields - conditionally required based on user_type
     nric = StringField('NRIC', render_kw={'class': 'form-control form-control-lg', 'placeholder': 'e.g., S1234567A'})
     
-    full_name = StringField('Full Name', render_kw={'class': 'form-control form-control-lg'})
+    full_name = StringField('Full Name', validators=[validate_input_length('Full Name', 100)], render_kw={'class': 'form-control form-control-lg'})
     
     language_preference = SelectField('Language Preference', choices=[
         ('', 'Choose a language...'),

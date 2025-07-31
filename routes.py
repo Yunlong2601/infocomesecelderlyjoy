@@ -16,6 +16,8 @@ from access_control import (
     check_application_ownership, sanitize_user_input, validate_file_upload,
     log_security_event
 )
+from rate_limiting_enhancement import rate_limit_per_endpoint, login_rate_limit, profile_edit_rate_limit, email_send_rate_limit
+from password_rotation_policy import PasswordRotationPolicy, password_rotation_required
 from security_enhancements import (
     CryptographicSecurity, SQLInjectionPrevention, AuthenticationSecurity,
     SSRFPrevention, DataIntegrityValidation, SecurityMonitoring
