@@ -16,6 +16,8 @@ body {
     backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255,255,255,0.2);
     box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 1030;
 }
 
 .navbar-brand {
@@ -167,6 +169,7 @@ body {
     box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     position: relative;
     overflow: hidden;
+    z-index: 1 !important; /* Keep hero section at low z-index */
 }
 
 .hero-section::before {
@@ -331,28 +334,54 @@ body {
     font-weight: 500;
 }
 
-/* Enhanced dropdown visibility */
+/* Enhanced dropdown visibility with highest priority */
 .dropdown-menu {
     border: 2px solid #dee2e6;
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     background-color: #ffffff;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
     position: absolute !important;
 }
 
-/* Ensure navbar dropdown has highest z-index */
+/* Ensure navbar dropdown has absolute highest z-index */
 .navbar .dropdown-menu {
-    z-index: 10000 !important;
+    z-index: 100000 !important;
+    position: absolute !important;
 }
 
-/* Fix navbar dropdown positioning */
+/* Fix navbar dropdown positioning with highest priority */
 .navbar .nav-item.dropdown {
     position: relative;
-    z-index: 1050;
+    z-index: 10500 !important;
 }
 
 .navbar .dropdown-toggle {
-    z-index: 1051;
+    z-index: 10501 !important;
+}
+
+/* Override any conflicting z-index from other sections */
+.container, .row, .col-lg-6, .col-lg-12, .col-md-4, .col-md-12 {
+    position: relative;
+    z-index: auto !important;
+}
+
+/* Ensure all content sections stay below navbar dropdown */
+main, .main-content, section {
+    position: relative;
+    z-index: 1 !important;
+}
+
+/* Force dropdown menu to appear above everything */
+.navbar .dropdown-menu {
+    z-index: 999999 !important;
+    position: fixed !important;
+}
+
+/* Bootstrap dropdown fix */
+.dropdown-menu.show {
+    z-index: 999999 !important;
+    position: absolute !important;
+}
 }
 
 .dropdown-item {
