@@ -60,8 +60,8 @@ def index():
         elif current_user.user_type == 'volunteer':
             # Get volunteer's applications
             volunteer_applications = VolunteerApplication.query.filter_by(
-                user_id=current_user.id
-            ).order_by(VolunteerApplication.applied_at.desc()).limit(6).all()
+                volunteer_id=current_user.id
+            ).order_by(VolunteerApplication.created_at.desc()).limit(6).all()
             
             # Get events needing volunteers (excluding ones they already applied to)
             applied_event_ids = [app.event_id for app in volunteer_applications]
