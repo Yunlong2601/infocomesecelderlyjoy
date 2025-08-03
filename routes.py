@@ -615,10 +615,8 @@ def detail(event_id):
 
 @events_bp.route('/create', methods=['GET', 'POST'])
 @login_required
+@require_organizer()
 def create():
-    if current_user.user_type != 'organizer':
-        flash('Only event organizers can create events.', 'danger')
-        return redirect(url_for('events.list'))
     
     form = EventForm()
     if form.validate_on_submit():
@@ -644,12 +642,9 @@ def create():
 
 @events_bp.route('/<int:event_id>/rsvp', methods=['POST'])
 @login_required
+@require_user_type('elderly', 'volunteer')
 def rsvp(event_id):
     event = Event.query.get_or_404(event_id)
-    
-    if current_user.user_type not in ['elderly', 'volunteer']:
-        flash('Only community members can RSVP to events.', 'danger')
-        return redirect(url_for('events.detail', event_id=event_id))
     
     existing_rsvp = EventRSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     
@@ -667,8 +662,13 @@ def rsvp(event_id):
 
 @events_bp.route('/<int:event_id>/cancel_rsvp', methods=['POST'])
 @login_required
+@require_user_type('elderly', 'volunteer')
 def cancel_rsvp(event_id):
     rsvp = EventRSVP.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+    
+    # Verify user owns this RSVP
+    if rsvp and not check_resource_ownership(rsvp.user_id, "You can only cancel your own RSVP."):
+        return redirect(url_for('events.detail', event_id=event_id))
     
     if rsvp:
         db.session.delete(rsvp)
@@ -681,10 +681,8 @@ def cancel_rsvp(event_id):
 
 @events_bp.route('/<int:event_id>/volunteer', methods=['POST'])
 @login_required
+@require_volunteer()
 def volunteer(event_id):
-    if current_user.user_type != 'volunteer':
-        flash('Only volunteers can apply to help with events.', 'danger')
-        return redirect(url_for('events.detail', event_id=event_id))
     
     event = Event.query.get_or_404(event_id)
     existing_application = VolunteerApplication.query.filter_by(volunteer_id=current_user.id, event_id=event_id).first()
@@ -710,21 +708,17 @@ def volunteer(event_id):
 # Profile Management Routes
 @profile_bp.route('/')
 @login_required
+@require_elderly()
 def settings():
     """Main profile settings page"""
-    if current_user.user_type != 'elderly':
-        flash('Profile management is only available for elderly users.', 'warning')
-        return redirect(url_for('main.profile'))
     
     return render_template('profile/settings.html')
 
 @profile_bp.route('/edit', methods=['GET', 'POST'])
 @login_required
+@require_elderly()
 def edit():
     """Edit basic profile information"""
-    if current_user.user_type != 'elderly':
-        flash('Profile editing is only available for elderly users.', 'warning')
-        return redirect(url_for('main.profile'))
     
     form = ElderlyProfileForm()
     
@@ -905,11 +899,9 @@ def verify_security_access():
 
 @profile_bp.route('/delete-picture', methods=['POST'])
 @login_required
+@require_elderly()
 def delete_picture():
     """Delete profile picture"""
-    if current_user.user_type != 'elderly':
-        flash('Profile management is only available for elderly users.', 'warning')
-        return redirect(url_for('main.profile'))
     
     if current_user.profile_picture:
         # Delete the file from filesystem
@@ -1025,11 +1017,9 @@ def change_password():
 
 @organizer_bp.route('/delete-picture', methods=['POST'])
 @login_required
+@require_organizer()
 def delete_picture():
     """Delete organizer profile picture"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied.', 'danger')
-        return redirect(url_for('main.index'))
     
     if current_user.profile_picture:
         # Delete the file from filesystem
@@ -1051,11 +1041,9 @@ volunteer_bp = Blueprint('volunteer', __name__, url_prefix='/volunteer')
 
 @volunteer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
+@require_volunteer()
 def profile():
     """Volunteer profile management"""
-    if current_user.user_type != 'volunteer':
-        flash('Access denied. This page is only for volunteers.', 'danger')
-        return redirect(url_for('main.index'))
     
     form = EditProfileForm()
     
@@ -1219,11 +1207,9 @@ def dashboard():
 
 @admin_bp.route('/users')
 @login_required
+@require_admin()
 def users():
     """Admin user management"""
-    if current_user.user_type != 'admin':
-        flash('Access denied. Admin privileges required.', 'danger')
-        return redirect(url_for('main.index'))
     
     page = request.args.get('page', 1, type=int)
     user_type_filter = request.args.get('type', 'all')
@@ -1418,9 +1404,6 @@ def approve_volunteer(app_id):
     
     # Verify organizer owns the event
     check_event_ownership(app.event.organizer_id)
-    if app.event.organizer_id != current_user.id:
-        flash('Access denied. You can only manage volunteers for your own events.', 'danger')
-        return redirect(url_for('organizer.dashboard'))
     
     app.status = 'approved'
     db.session.commit()
@@ -1430,18 +1413,14 @@ def approve_volunteer(app_id):
 
 @organizer_bp.route('/volunteer/<int:app_id>/reject', methods=['POST'])
 @login_required
+@require_organizer()
 def reject_volunteer(app_id):
     """Reject a volunteer application"""
-    if current_user.user_type != 'organizer':
-        flash('Access denied. Only organizers can manage volunteers.', 'danger')
-        return redirect(url_for('main.index'))
     
     app = VolunteerApplication.query.get_or_404(app_id)
     
     # Verify organizer owns the event
-    if app.event.organizer_id != current_user.id:
-        flash('Access denied. You can only manage volunteers for your own events.', 'danger')
-        return redirect(url_for('organizer.dashboard'))
+    check_event_ownership(app.event.organizer_id)
     
     app.status = 'rejected'
     db.session.commit()
