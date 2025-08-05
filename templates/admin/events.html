@@ -127,15 +127,21 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group-vertical btn-group-sm">
+                                                    <!-- Review Button (Primary Action) -->
+                                                    <a href="{{ url_for('admin.review_event', event_id=event.id) }}" class="btn btn-primary btn-sm mb-1">
+                                                        <i class="fas fa-clipboard-check me-1"></i>Review with Remarks
+                                                    </a>
+                                                    
+                                                    <!-- Quick Action Buttons -->
                                                     {% if event.status == 'pending' %}
                                                         <form method="POST" action="{{ url_for('admin.approve_event', event_id=event.id) }}" class="mb-1">
-                                                            <button type="submit" class="btn btn-success btn-sm w-100">
-                                                                <i class="fas fa-check me-1"></i>Approve
+                                                            <button type="submit" class="btn btn-success btn-sm w-100" title="Quick approve without remarks">
+                                                                <i class="fas fa-check me-1"></i>Quick Approve
                                                             </button>
                                                         </form>
                                                         <form method="POST" action="{{ url_for('admin.reject_event', event_id=event.id) }}">
-                                                            <button type="submit" class="btn btn-danger btn-sm w-100">
-                                                                <i class="fas fa-times me-1"></i>Reject
+                                                            <button type="submit" class="btn btn-danger btn-sm w-100" title="Quick reject without remarks">
+                                                                <i class="fas fa-times me-1"></i>Quick Reject
                                                             </button>
                                                         </form>
                                                     {% elif event.status == 'rejected' %}
@@ -150,6 +156,13 @@
                                                                 <i class="fas fa-times me-1"></i>Reject
                                                             </button>
                                                         </form>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Show admin remarks if they exist -->
+                                                    {% if event.admin_remarks %}
+                                                        <small class="text-muted mt-2" title="{{ event.admin_remarks }}">
+                                                            <i class="fas fa-comment-alt"></i> Has remarks
+                                                        </small>
                                                     {% endif %}
                                                 </div>
                                             </td>

@@ -242,3 +242,25 @@ class AccountTerminationForm(FlaskForm):
     confirm_termination = BooleanField('I confirm that I want to terminate this account', 
         validators=[DataRequired(message="You must confirm the termination")])
     submit = SubmitField('Terminate Account', render_kw={'class': 'btn btn-danger'})
+
+# Event Review Form for Admin
+class EventReviewForm(FlaskForm):
+    """Form for admin to approve/reject events with remarks"""
+    action = SelectField('Decision', 
+        choices=[
+            ('', 'Select Action...'),
+            ('approved', 'Approve Event'),
+            ('rejected', 'Reject Event')
+        ],
+        validators=[DataRequired(message="Please select an action")],
+        render_kw={'class': 'form-select form-select-lg'}
+    )
+    admin_remarks = TextAreaField('Admin Remarks', 
+        validators=[DataRequired(message="Please provide remarks for your decision")],
+        render_kw={
+            "placeholder": "Provide detailed feedback about your decision. This will be sent to the organizer.",
+            "rows": 4, 
+            "class": "form-control form-control-lg"
+        }
+    )
+    submit = SubmitField('Submit Review', render_kw={'class': 'btn btn-primary btn-lg'})

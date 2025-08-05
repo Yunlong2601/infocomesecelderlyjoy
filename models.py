@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)  # For admin user management
     
     # Relationships
-    organized_events = db.relationship('Event', backref='organizer', lazy=True, foreign_keys='Event.organizer_id')
+    organized_events = db.relationship('Event', lazy=True, foreign_keys='Event.organizer_id')
     rsvps = db.relationship('EventRSVP', backref='user', lazy=True)
     volunteer_applications = db.relationship('VolunteerApplication', backref='volunteer', lazy=True)
 
@@ -178,9 +178,16 @@ class Event(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Admin review fields
+    admin_remarks = db.Column(db.Text)  # Admin comments when approving/rejecting
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # Admin who reviewed
+    reviewed_at = db.Column(db.DateTime)  # When it was reviewed
+    
     # Relationships
     rsvps = db.relationship('EventRSVP', backref='event', lazy=True)
     volunteer_applications = db.relationship('VolunteerApplication', backref='event', lazy=True)
+    organizer = db.relationship('User', foreign_keys=[organizer_id])
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
 
     def get_rsvp_count(self):
         return EventRSVP.query.filter_by(event_id=self.id).count()

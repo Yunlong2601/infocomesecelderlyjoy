@@ -248,6 +248,75 @@ def send_termination_notification(email, user_name, reasons, custom_reason):
         logging.error(f"Failed to send termination notification: {e}")
         return False
 
+def send_event_review_notification(email, organizer_name, event_title, action, admin_remarks):
+    """Send event review notification to organizer"""
+    try:
+        subject = f"Event Review: {event_title} - Community Connect"
+        action_text = "Approved" if action == "approved" else "Rejected"
+        status_color = "#28a745" if action == "approved" else "#dc3545"
+        
+        html_body = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: {status_color}; color: white; padding: 30px; text-align: center; border-radius: 10px; }}
+                .content {{ padding: 30px; background: #f8f9fa; border-radius: 10px; margin: 20px 0; }}
+                .event-details {{ background: white; padding: 20px; border-radius: 5px; margin: 20px 0; }}
+                .remarks {{ background: white; padding: 20px; border-left: 4px solid {status_color}; margin: 20px 0; border-radius: 5px; }}
+                .footer {{ color: #6c757d; font-size: 0.9rem; text-align: center; margin-top: 30px; }}
+                .status-badge {{ background: {status_color}; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="margin: 0;">Event {action_text}</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 1.1rem;">Community Connect Platform</p>
+                </div>
+                <div class="content">
+                    <p style="font-size: 1.1rem;">Dear {organizer_name},</p>
+                    <p>Your event has been reviewed by our administration team.</p>
+                    
+                    <div class="event-details">
+                        <h3 style="margin-top: 0; color: #333;">Event Details:</h3>
+                        <p><strong>Event Title:</strong> {event_title}</p>
+                        <p><strong>Status:</strong> <span class="status-badge">{action_text}</span></p>
+                    </div>
+                    
+                    <div class="remarks">
+                        <h3 style="color: {status_color}; margin-top: 0;">Admin Feedback:</h3>
+                        <p>{admin_remarks}</p>
+                    </div>
+                    
+                    {"<p>Congratulations! Your event has been approved and is now visible to community members.</p>" if action == "approved" else "<p>We apologize that your event cannot be approved at this time. Please review the feedback above and feel free to resubmit your event with the necessary changes.</p>"}
+                    
+                    <p>Thank you for organizing events for our community!</p>
+                    <p><strong>The Community Connect Team</strong></p>
+                </div>
+                <div class="footer">
+                    <p>This is an automated notification from Community Connect.<br>
+                    Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        msg = Message(
+            subject=subject,
+            recipients=['samplebookshopnyp@gmail.com'],  # All emails go here for school project
+            html=html_body
+        )
+        mail.send(msg)
+        logging.info(f"Event review notification sent for event: {event_title} ({action})")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send event review notification: {e}")
+        return False
+
 def send_termination_notification(email, first_name, reasons, custom_reason):
     """Send account termination notification email"""
     try:

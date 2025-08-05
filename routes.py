@@ -9,7 +9,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
-from email_utils import send_verification_email, send_login_success_notification, send_termination_notification
+from email_utils import send_verification_email, send_login_success_notification, send_termination_notification, send_event_review_notification
 from access_control import (
     require_user_type, require_admin, require_organizer, require_volunteer, 
     require_elderly, check_resource_ownership, check_event_ownership, 
@@ -1269,14 +1269,57 @@ def events():
     return render_template('admin/events.html', events=events,
                          status_filter=status_filter, search=search)
 
+@admin_bp.route('/event/<int:event_id>/review', methods=['GET', 'POST'])
+@login_required
+@require_admin()
+def review_event(event_id):
+    """Review an event with admin remarks"""
+    from forms import EventReviewForm
+    from datetime import datetime
+    
+    event = Event.query.get_or_404(event_id)
+    form = EventReviewForm()
+    
+    if form.validate_on_submit():
+        # Update event status and add admin remarks
+        event.status = form.action.data
+        event.admin_remarks = form.admin_remarks.data
+        event.reviewed_by = current_user.id
+        event.reviewed_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # Send notification email to organizer
+        try:
+            organizer = User.query.get(event.organizer_id)
+            if organizer and organizer.email:
+                send_event_review_notification(
+                    organizer.email, 
+                    organizer.get_full_name(), 
+                    event.title,
+                    form.action.data,
+                    form.admin_remarks.data
+                )
+        except Exception as e:
+            flash(f'Event {form.action.data} but email notification failed: {str(e)}', 'warning')
+        
+        action_text = 'approved' if form.action.data == 'approved' else 'rejected'
+        flash(f'Event "{event.title}" has been {action_text} with remarks.', 'success')
+        return redirect(url_for('admin.events'))
+    
+    return render_template('admin/review_event.html', form=form, event=event)
+
 @admin_bp.route('/event/<int:event_id>/approve', methods=['POST'])
 @login_required
 @require_admin()
 def approve_event(event_id):
-    """Approve an event"""
+    """Quick approve an event (legacy route)"""
+    from datetime import datetime
     
     event = Event.query.get_or_404(event_id)
     event.status = 'approved'
+    event.reviewed_by = current_user.id
+    event.reviewed_at = datetime.utcnow()
     db.session.commit()
     
     flash(f'Event "{event.title}" has been approved.', 'success')
@@ -1286,10 +1329,13 @@ def approve_event(event_id):
 @login_required
 @require_admin()
 def reject_event(event_id):
-    """Reject an event"""
+    """Quick reject an event (legacy route)"""
+    from datetime import datetime
     
     event = Event.query.get_or_404(event_id)
     event.status = 'rejected'
+    event.reviewed_by = current_user.id
+    event.reviewed_at = datetime.utcnow()
     db.session.commit()
     
     flash(f'Event "{event.title}" has been rejected.', 'success')
