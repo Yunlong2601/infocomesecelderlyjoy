@@ -110,7 +110,7 @@
                                         Need {{ voucher.points_required - (current_user.reward_points or 0) }} more points
                                     </button>
                                 {% else %}
-                                    <form method="POST" action="{{ url_for('redeem_voucher') }}" class="d-inline w-100">
+                                    <form method="POST" action="{{ url_for('main.redeem_voucher') }}" class="d-inline w-100">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <input type="hidden" name="voucher_id" value="{{ voucher.id }}">
                                         <button type="submit" class="btn btn-primary btn-sm w-100" 
