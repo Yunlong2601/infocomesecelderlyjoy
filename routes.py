@@ -4,7 +4,7 @@ import os
 import json
 import re
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
@@ -1621,12 +1621,12 @@ def terminate_account(user_id):
 def rewards():
     """Display available vouchers and user's redeemed vouchers"""
     # Debug logging
-    app.logger.info(f"Rewards access attempt - User authenticated: {current_user.is_authenticated}, User ID: {current_user.id if current_user.is_authenticated else 'None'}, User type: {current_user.user_type if current_user.is_authenticated else 'None'}")
+    current_app.logger.info(f"Rewards access attempt - User authenticated: {current_user.is_authenticated}, User ID: {current_user.id if current_user.is_authenticated else 'None'}, User type: {current_user.user_type if current_user.is_authenticated else 'None'}")
     
     # Check if user has access to rewards
     if not current_user.is_authenticated or current_user.user_type not in ['elderly', 'volunteer']:
         flash('Access denied. Rewards are only available for community members and volunteers.', 'warning')
-        app.logger.warning(f"Rewards access denied - User authenticated: {current_user.is_authenticated}, User type: {current_user.user_type if current_user.is_authenticated else 'None'}")
+        current_app.logger.warning(f"Rewards access denied - User authenticated: {current_user.is_authenticated}, User type: {current_user.user_type if current_user.is_authenticated else 'None'}")
         return redirect(url_for('main.index'))
     
     try:
@@ -1636,12 +1636,12 @@ def rewards():
         # Get user's redeemed vouchers
         redeemed_vouchers = UserReward.query.filter_by(user_id=current_user.id).order_by(UserReward.redeemed_at.desc()).all()
         
-        app.logger.info(f"Rewards page loaded successfully for user {current_user.id}")
+        current_app.logger.info(f"Rewards page loaded successfully for user {current_user.id}")
         return render_template('rewards.html', 
                              vouchers=vouchers, 
                              redeemed_vouchers=redeemed_vouchers)
     except Exception as e:
-        app.logger.error(f"Error loading rewards page: {str(e)}")
+        current_app.logger.error(f"Error loading rewards page: {str(e)}")
         flash('Error loading rewards page. Please try again.', 'error')
         return redirect(url_for('main.index'))
 
