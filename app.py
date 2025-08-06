@@ -9,6 +9,7 @@ from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from enhanced_security_complete import initialize_complete_security
+from rbac_middleware import rbac_middleware
 
 # Configure enhanced security logging
 logging.basicConfig(
@@ -83,6 +84,9 @@ login_manager.login_view = 'auth.login'  # type: ignore
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 login_manager.session_protection = "strong"  # Enhanced session protection
+
+# Initialize RBAC security middleware
+rbac_middleware.init_app(app)
 
 # Session management middleware
 @app.before_request
