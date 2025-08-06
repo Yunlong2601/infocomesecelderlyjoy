@@ -183,8 +183,9 @@ def register_blueprints(app):
     app.register_blueprint(volunteer_bp, url_prefix='/volunteer')
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-# Register blueprints
-register_blueprints(app)
+# Register blueprints after app context is established
+with app.app_context():
+    register_blueprints(app)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

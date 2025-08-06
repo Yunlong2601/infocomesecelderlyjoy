@@ -210,7 +210,7 @@ class Event(db.Model):
     # Relationships
     rsvps = db.relationship('EventRSVP', backref='event', lazy=True)
     volunteer_applications = db.relationship('VolunteerApplication', backref='event', lazy=True)
-    organizer = db.relationship('User', foreign_keys=[organizer_id])
+    organizer = db.relationship('User', foreign_keys=[organizer_id], overlaps="organized_events")
     reviewer = db.relationship('User', foreign_keys=[reviewed_by])
 
     def get_rsvp_count(self):
