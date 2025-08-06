@@ -12,7 +12,9 @@ Preferred communication style: Simple, everyday language.
 The application features an elderly-friendly light theme designed for enhanced readability, utilizing high-contrast colors, larger fonts, white backgrounds with dark text, and improved button sizing and spacing. The design emphasizes accessibility, with a mobile-first approach and large, accessible UI elements. Jinja2 templates with Bootstrap 5 are used, along with Font Awesome for consistent iconography.
 
 ### Technical Implementations
-The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. 
+The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation.
+
+**Database Structure**: All SQL database models are separated into `database_models.py` for easier code review and demonstration, with `models.py` serving as a clean import point. 
 
 **Comprehensive Security System**: All security features are consolidated in `comprehensive_security_system.py` for easy code walkthrough, including:
 - Multi-Factor Authentication (2FA) with email-based verification
