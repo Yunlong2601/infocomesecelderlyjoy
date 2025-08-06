@@ -21,13 +21,12 @@
                                      alt="Current Profile Picture" 
                                      class="img-fluid rounded-circle mb-3" 
                                      style="width: 120px; height: 120px; object-fit: cover;">
-                                
-                                <form method="POST" action="{{ url_for('profile.delete_picture') }}" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                            onclick="return confirm('Are you sure you want to remove your profile picture?')">
-                                        <i class="fas fa-trash me-1"></i>Remove Picture
-                                    </button>
-                                </form>
+                                <br>
+                                <a href="{{ url_for('profile.delete_picture') }}" 
+                                   class="btn btn-sm btn-outline-danger" 
+                                   onclick="return confirm('Are you sure you want to remove your profile picture?')">
+                                    <i class="fas fa-trash me-1"></i>Remove Picture
+                                </a>
                             {% else %}
                                 <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
                                      style="width: 120px; height: 120px;">

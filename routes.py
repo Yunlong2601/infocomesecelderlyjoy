@@ -1070,7 +1070,7 @@ def verify_security_access():
                            attempts=session.get('verify_attempts', 0))
 
 
-@profile_bp.route('/delete-picture', methods=['POST'])
+@profile_bp.route('/delete-picture', methods=['GET'])
 @login_required
 @require_elderly
 def delete_picture():
