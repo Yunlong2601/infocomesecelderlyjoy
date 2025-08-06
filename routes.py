@@ -145,7 +145,7 @@ def login():
         
         # Comprehensive authentication validation (OWASP #7)
         auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
-            login_identifier, request.remote_addr
+            login_identifier, form.password.data, user_type
         )
         if not auth_valid:
             OWASPSecurityValidator.log_security_event(
