@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification
+from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
 from email_utils import send_verification_email, send_login_success_notification, send_termination_notification, send_event_review_notification
 from access_control import (
@@ -660,7 +660,12 @@ def rsvp(event_id):
         rsvp = EventRSVP(user_id=current_user.id, event_id=event_id)
         db.session.add(rsvp)
         db.session.commit()
-        flash('RSVP successful! See you at the event.', 'success')
+        
+        # Award points for RSVP (attendance commitment)
+        if award_event_points(current_user.id, event_id, 'attendance'):
+            flash('RSVP successful! You earned 20 points. See you at the event.', 'success')
+        else:
+            flash('RSVP successful! See you at the event.', 'success')
     
     return redirect(url_for('events.detail', event_id=event_id))
 
@@ -1457,7 +1462,12 @@ def approve_volunteer(app_id):
     
     app.status = 'approved'
     db.session.commit()
-    flash(f'Volunteer application from {app.volunteer.get_full_name()} has been approved!', 'success')
+    
+    # Award points to volunteer for approved application
+    if award_event_points(app.volunteer_id, app.event_id, 'volunteer'):
+        flash(f'Volunteer application from {app.volunteer.get_full_name()} has been approved! They earned 30 points.', 'success')
+    else:
+        flash(f'Volunteer application from {app.volunteer.get_full_name()} has been approved!', 'success')
     
     return redirect(url_for('organizer.event_detail', event_id=app.event_id))
 
@@ -1602,3 +1612,102 @@ def terminate_account(user_id):
         return redirect(url_for('admin.users'))
     
     return render_template('admin/terminate_account.html', form=form, user=user)
+
+
+# ========== REWARD SYSTEM ROUTES ==========
+
+@main_bp.route('/rewards')
+@login_required
+@require_user_type(['elderly', 'volunteer'])
+def rewards():
+    """Display available vouchers and user's redeemed vouchers"""
+    try:
+        # Get available vouchers
+        vouchers = RewardVoucher.query.filter_by(is_active=True).order_by(RewardVoucher.points_required).all()
+        
+        # Get user's redeemed vouchers
+        redeemed_vouchers = UserReward.query.filter_by(user_id=current_user.id).order_by(UserReward.redeemed_at.desc()).all()
+        
+        return render_template('rewards.html', 
+                             vouchers=vouchers, 
+                             redeemed_vouchers=redeemed_vouchers)
+    except Exception as e:
+        flash('Error loading rewards page. Please try again.', 'error')
+        return redirect(url_for('index'))
+
+
+@main_bp.route('/redeem-voucher', methods=['POST'])
+@login_required
+@require_user_type(['elderly', 'volunteer'])
+def redeem_voucher():
+    """Redeem a voucher with user's points"""
+    try:
+        voucher_id = request.form.get('voucher_id')
+        if not voucher_id:
+            flash('Invalid voucher selection.', 'error')
+            return redirect(url_for('rewards'))
+        
+        # Redeem the voucher
+        redemption, message = UserReward.redeem_voucher(current_user.id, voucher_id)
+        
+        if redemption:
+            flash(f'Voucher redeemed successfully! Your redemption code is: {redemption.redemption_code}', 'success')
+            
+            # Log the redemption for security monitoring
+            log_security_event(
+                'VOUCHER_REDEEMED',
+                user_id=current_user.id,
+                details={
+                    'voucher_id': voucher_id,
+                    'points_spent': redemption.points_spent,
+                    'redemption_code': redemption.redemption_code
+                }
+            )
+        else:
+            flash(message, 'error')
+        
+        return redirect(url_for('rewards'))
+    
+    except Exception as e:
+        flash('Error processing voucher redemption. Please try again.', 'error')
+        return redirect(url_for('rewards'))
+
+
+def award_event_points(user_id, event_id, participation_type='attendance'):
+    """Award points to a user for event participation"""
+    try:
+        user = User.query.get(user_id)
+        if not user or user.user_type not in ['elderly', 'volunteer']:
+            return False
+        
+        # Point values based on participation type
+        point_values = {
+            'attendance': 20,      # Elderly attending events
+            'volunteer': 30,       # Volunteers helping at events
+            'completion': 10,      # Completing event activities
+            'setup': 10,          # Helping with setup/cleanup
+            'training': 15        # Completing volunteer training
+        }
+        
+        points = point_values.get(participation_type, 10)
+        
+        # Award the points
+        success = user.award_points(points, f"Event participation: {participation_type}")
+        
+        if success:
+            # Log the point award
+            log_security_event(
+                'POINTS_AWARDED',
+                user_id=user_id,
+                details={
+                    'event_id': event_id,
+                    'participation_type': participation_type,
+                    'points_awarded': points,
+                    'total_points': user.reward_points
+                }
+            )
+        
+        return success
+    
+    except Exception as e:
+        return False

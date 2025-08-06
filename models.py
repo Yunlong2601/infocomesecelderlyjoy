@@ -36,6 +36,9 @@ class User(UserMixin, db.Model):
     profile_picture = db.Column(db.String(255), nullable=True)  # Path to profile picture
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Reward system
+    reward_points = db.Column(db.Integer, default=0)  # Points earned from participation
+    
     # Email verification fields (for organizers/volunteers)
     email_verified = db.Column(db.Boolean, default=False)
     two_factor_enabled = db.Column(db.Boolean, default=False)
@@ -45,6 +48,7 @@ class User(UserMixin, db.Model):
     organized_events = db.relationship('Event', lazy=True, foreign_keys='Event.organizer_id')
     rsvps = db.relationship('EventRSVP', backref='user', lazy=True)
     volunteer_applications = db.relationship('VolunteerApplication', backref='volunteer', lazy=True)
+    redeemed_rewards = db.relationship('UserReward', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -118,6 +122,25 @@ class User(UserMixin, db.Model):
         
         return decrypted_data
     
+    def award_points(self, points, reason="Event participation"):
+        """Award reward points to user"""
+        if self.user_type in ['elderly', 'volunteer']:
+            self.reward_points = (self.reward_points or 0) + points
+            db.session.commit()
+            return True
+        return False
+    
+    def get_display_name(self):
+        """Get user's display name based on user type"""
+        if self.user_type == 'elderly':
+            return self.full_name or "Community Member"
+        elif self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.username:
+            return self.username
+        else:
+            return "User"
+    
     @classmethod
     def safe_query_by_nric(cls, nric_value):
         """Safely query user by NRIC - temporarily using direct match for debugging"""
@@ -158,11 +181,6 @@ class User(UserMixin, db.Model):
         if self.user_type == 'elderly':
             return self.full_name or 'Elderly User'
         return f"{self.first_name} {self.last_name}" if self.first_name and self.last_name else 'User'
-    
-    def get_display_name(self):
-        if self.user_type == 'elderly':
-            return self.nric or 'Unknown NRIC'
-        return self.username or self.email or 'Unknown User'
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -264,3 +282,91 @@ class EmailVerification(db.Model):
         """Mark the verification code as used"""
         self.used = True
         db.session.commit()
+
+
+class RewardVoucher(db.Model):
+    """Model for available reward vouchers that users can redeem with points"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    points_required = db.Column(db.Integer, nullable=False)
+    voucher_type = db.Column(db.String(50), nullable=False)  # 'discount', 'gift_card', 'service'
+    voucher_value = db.Column(db.String(50), nullable=False)  # e.g., "$10 off", "Free coffee"
+    partner_name = db.Column(db.String(100), nullable=True)  # Partner business name
+    terms_conditions = db.Column(db.Text, nullable=True)
+    expiry_days = db.Column(db.Integer, default=30)  # Voucher valid for X days after redemption
+    is_active = db.Column(db.Boolean, default=True)
+    stock_limit = db.Column(db.Integer, nullable=True)  # Optional stock limit
+    redeemed_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user_rewards = db.relationship('UserReward', backref='voucher', lazy=True)
+    
+    @property
+    def is_available(self):
+        """Check if voucher is still available"""
+        if not self.is_active:
+            return False
+        if self.stock_limit and self.redeemed_count >= self.stock_limit:
+            return False
+        return True
+
+
+class UserReward(db.Model):
+    """Model to track user reward redemptions"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    voucher_id = db.Column(db.Integer, db.ForeignKey('reward_voucher.id'), nullable=False)
+    points_spent = db.Column(db.Integer, nullable=False)
+    redemption_code = db.Column(db.String(20), unique=True, nullable=False)
+    redeemed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    used_at = db.Column(db.DateTime, nullable=True)
+    
+    @staticmethod
+    def generate_redemption_code():
+        """Generate a unique redemption code"""
+        return ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(12))
+    
+    @classmethod
+    def redeem_voucher(cls, user_id, voucher_id):
+        """Redeem a voucher for a user"""
+        from sqlalchemy import text
+        
+        # Get user and voucher
+        user = User.query.get(user_id)
+        voucher = RewardVoucher.query.get(voucher_id)
+        
+        if not user or not voucher:
+            return None, "User or voucher not found"
+        
+        if not voucher.is_available:
+            return None, "Voucher is no longer available"
+        
+        if user.reward_points < voucher.points_required:
+            return None, f"Insufficient points. Need {voucher.points_required}, have {user.reward_points}"
+        
+        # Create redemption record
+        redemption = cls(
+            user_id=user_id,
+            voucher_id=voucher_id,
+            points_spent=voucher.points_required,
+            redemption_code=cls.generate_redemption_code(),
+            expires_at=datetime.utcnow() + timedelta(days=voucher.expiry_days)
+        )
+        
+        # Deduct points and update voucher count
+        user.reward_points -= voucher.points_required
+        voucher.redeemed_count += 1
+        
+        db.session.add(redemption)
+        db.session.commit()
+        
+        return redemption, "Voucher redeemed successfully"
+    
+    @property
+    def is_expired(self):
+        """Check if redemption has expired"""
+        return datetime.utcnow() > self.expires_at and not self.is_used

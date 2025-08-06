@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Rewards - Community Connect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="fas fa-gift me-2"></i>Rewards Center
+                </h1>
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center py-2">
+                        <h5 class="mb-0">
+                            <i class="fas fa-coins me-2"></i>{{ current_user.reward_points or 0 }} Points
+                        </h5>
+                        <small>Available to spend</small>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted">Redeem your points for amazing rewards and vouchers from our community partners!</p>
+        </div>
+    </div>
+
+    <!-- Points Info Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-info-circle me-2"></i>How to Earn Points
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-success">
+                                <i class="fas fa-calendar-check me-1"></i>For Community Members
+                            </h6>
+                            <ul class="small text-muted">
+                                <li>Attend community events: <strong>20 points</strong></li>
+                                <li>Complete event activities: <strong>10 points</strong></li>
+                                <li>Regular participation bonus: <strong>5 points</strong></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-info">
+                                <i class="fas fa-hands-helping me-1"></i>For Volunteers
+                            </h6>
+                            <ul class="small text-muted">
+                                <li>Volunteer at events: <strong>30 points</strong></li>
+                                <li>Complete volunteer training: <strong>15 points</strong></li>
+                                <li>Help with setup/cleanup: <strong>10 points</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Vouchers -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="fw-bold text-secondary mb-3">Available Vouchers</h3>
+            {% if vouchers %}
+                <div class="row">
+                    {% for voucher in vouchers %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 {% if not voucher.is_available or (current_user.reward_points or 0) < voucher.points_required %}opacity-75{% endif %}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="badge bg-{{ 'primary' if voucher.voucher_type == 'gift_card' else 'success' if voucher.voucher_type == 'discount' else 'info' }}">
+                                    {{ voucher.voucher_type.replace('_', ' ').title() }}
+                                </span>
+                                <span class="fw-bold text-primary">{{ voucher.points_required }} pts</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title text-primary fw-bold">{{ voucher.title }}</h5>
+                                <h6 class="text-success mb-2">{{ voucher.voucher_value }}</h6>
+                                {% if voucher.partner_name %}
+                                <p class="small text-muted mb-2">
+                                    <i class="fas fa-store me-1"></i>{{ voucher.partner_name }}
+                                </p>
+                                {% endif %}
+                                <p class="card-text small">{{ voucher.description }}</p>
+                                
+                                {% if voucher.stock_limit %}
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-box me-1"></i>
+                                        {{ voucher.stock_limit - voucher.redeemed_count }} left
+                                    </small>
+                                </div>
+                                {% endif %}
+                                
+                                {% if voucher.terms_conditions %}
+                                <small class="text-muted d-block mb-2">
+                                    <strong>Terms:</strong> {{ voucher.terms_conditions[:80] }}{% if voucher.terms_conditions|length > 80 %}...{% endif %}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                {% if not voucher.is_available %}
+                                    <button class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="fas fa-times me-1"></i>Out of Stock
+                                    </button>
+                                {% elif (current_user.reward_points or 0) < voucher.points_required %}
+                                    <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                        <i class="fas fa-coins me-1"></i>
+                                        Need {{ voucher.points_required - (current_user.reward_points or 0) }} more points
+                                    </button>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('redeem_voucher') }}" class="d-inline w-100">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <input type="hidden" name="voucher_id" value="{{ voucher.id }}">
+                                        <button type="submit" class="btn btn-primary btn-sm w-100" 
+                                                onclick="return confirm('Are you sure you want to redeem this voucher for {{ voucher.points_required }} points?')">
+                                            <i class="fas fa-gift me-1"></i>Redeem Now
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-gift fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Vouchers Available</h4>
+                    <p class="text-muted">Check back later for new rewards!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- My Redeemed Vouchers -->
+    {% if redeemed_vouchers %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="fw-bold text-secondary mb-3">My Redeemed Vouchers</h3>
+            <div class="row">
+                {% for redemption in redeemed_vouchers %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card {% if redemption.is_expired %}bg-light{% endif %}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ redemption.redeemed_at.strftime('%b %d, %Y') }}</small>
+                            <span class="badge {% if redemption.is_used %}bg-success{% elif redemption.is_expired %}bg-danger{% else %}bg-warning{% endif %}">
+                                {% if redemption.is_used %}Used{% elif redemption.is_expired %}Expired{% else %}Active{% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ redemption.voucher.title }}</h6>
+                            <p class="text-success fw-bold mb-2">{{ redemption.voucher.voucher_value }}</p>
+                            <p class="small text-muted mb-2">Code: <strong>{{ redemption.redemption_code }}</strong></p>
+                            {% if not redemption.is_used and not redemption.is_expired %}
+                            <p class="small text-warning">
+                                <i class="fas fa-clock me-1"></i>
+                                Expires: {{ redemption.expires_at.strftime('%b %d, %Y') }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

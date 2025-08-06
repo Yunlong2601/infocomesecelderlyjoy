@@ -33,6 +33,13 @@
                             <i class="fas fa-calendar me-1"></i>Events
                         </a>
                     </li>
+                    {% if current_user.is_authenticated and current_user.user_type in ['elderly', 'volunteer'] %}
+                    <li class="nav-item">
+                        <a class="nav-link fs-5" href="{{ url_for('main.rewards') }}">
+                            <i class="fas fa-gift me-1"></i>Rewards
+                        </a>
+                    </li>
+                    {% endif %}
                     {% if current_user.is_authenticated and current_user.user_type == 'organizer' %}
                     <li class="nav-item">
                         <a class="nav-link fs-5" href="{{ url_for('organizer.dashboard') }}">
@@ -47,11 +54,21 @@
                     <li class="nav-item dropdown" style="position: relative; z-index: 100001 !important;">
                         <a class="nav-link dropdown-toggle fs-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="z-index: 100002 !important;">
                             <i class="fas fa-user me-1"></i>{{ current_user.get_full_name().split()[0] if current_user.user_type == 'elderly' else current_user.first_name }}
+                            {% if current_user.user_type in ['elderly', 'volunteer'] %}
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-coins"></i> {{ current_user.reward_points or 0 }}
+                            </span>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" style="z-index: 100010 !important; position: absolute !important;">
                             <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
                                 <i class="fas fa-user-circle me-1"></i>My Profile
                             </a></li>
+                            {% if current_user.user_type in ['elderly', 'volunteer'] %}
+                            <li><a class="dropdown-item" href="{{ url_for('main.rewards') }}">
+                                <i class="fas fa-gift me-1"></i>My Rewards <span class="badge bg-primary ms-1">{{ current_user.reward_points or 0 }}</span>
+                            </a></li>
+                            {% endif %}
                             {% if current_user.user_type == 'elderly' %}
                             <li><a class="dropdown-item" href="{{ url_for('profile.settings') }}">
                                 <i class="fas fa-cog me-1"></i>Profile Settings
