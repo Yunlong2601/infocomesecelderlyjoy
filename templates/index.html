@@ -16,64 +16,34 @@
                 {% endif %}
             </p>
             {% if current_user.is_authenticated %}
-            <div class="d-grid gap-3 d-md-flex">
-                <a href="{{ url_for('events.list') }}" class="btn btn-lg px-4 shadow" 
-                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                          border: none; color: white; font-weight: 600; 
-                          text-decoration: none; transition: all 0.3s ease;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102,126,234,0.4)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'">
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0" style="min-width: 200px;">
                     <i class="fas fa-calendar me-2"></i>Browse Events
                 </a>
                 {% if current_user.user_type == 'elderly' %}
-                <a href="{{ url_for('main.profile') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
-                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
-                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
-                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
-                    <i class="fas fa-user-circle me-2"></i>My Dashboard
+                <a href="{{ url_for('main.profile') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
+                    <i class="fas fa-user-circle me-2"></i>My Profile
                 </a>
                 {% elif current_user.user_type == 'organizer' %}
-                <a href="{{ url_for('organizer.dashboard') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
-                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
-                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
-                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
+                <a href="{{ url_for('organizer.dashboard') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
                     <i class="fas fa-tachometer-alt me-2"></i>Organizer Dashboard
                 </a>
                 {% elif current_user.user_type == 'volunteer' %}
-                <a href="{{ url_for('volunteer.dashboard') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
-                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
-                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
-                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
+                <a href="{{ url_for('volunteer.dashboard') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
                     <i class="fas fa-hands-helping me-2"></i>Volunteer Dashboard
                 </a>
                 {% elif current_user.user_type == 'admin' %}
-                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-light btn-lg px-4 shadow" 
-                   style="border: 2px solid rgba(255,255,255,0.8); color: rgba(255,255,255,0.9); font-weight: 600; 
-                          background: rgba(255,255,255,0.1); transition: all 0.3s ease;"
-                   onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.color='white'; this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='rgba(255,255,255,0.9)'; this.style.transform='translateY(0)'">
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
                     <i class="fas fa-shield-alt me-2"></i>Admin Dashboard
                 </a>
                 {% endif %}
             </div>
             {% else %}
-            <div class="d-grid gap-3 d-md-flex">
-                <a href="{{ url_for('auth.register') }}" class="btn btn-lg px-4 shadow" 
-                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                          border: none; color: white; font-weight: 600; 
-                          text-decoration: none; transition: all 0.3s ease;"
-                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102,126,234,0.4)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'">
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0" style="min-width: 200px;">
                     <i class="fas fa-user-plus me-2"></i>Join Today
                 </a>
-                <a href="{{ url_for('events.list') }}" class="btn btn-outline-dark btn-lg px-4 shadow" 
-                   style="border: 2px solid #495057; color: #495057; font-weight: 600; 
-                          background: rgba(255,255,255,0.9); transition: all 0.3s ease;"
-                   onmouseover="this.style.background='#495057'; this.style.color='white'; this.style.transform='translateY(-2px)'"
-                   onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.color='#495057'; this.style.transform='translateY(0)'">
+                <a href="{{ url_for('events.list') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
                     <i class="fas fa-calendar me-2"></i>Browse Events
                 </a>
             </div>
