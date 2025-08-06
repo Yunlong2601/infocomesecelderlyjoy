@@ -42,13 +42,19 @@ class User(UserMixin, db.Model):
     # Email verification fields (for organizers/volunteers)
     email_verified = db.Column(db.Boolean, default=False)
     two_factor_enabled = db.Column(db.Boolean, default=False)
-    is_active = db.Column(db.Boolean, default=True)  # For admin user management
+    account_active = db.Column(db.Boolean, default=True)  # For admin user management
     
     # Relationships
     organized_events = db.relationship('Event', lazy=True, foreign_keys='Event.organizer_id')
     rsvps = db.relationship('EventRSVP', backref='user', lazy=True)
     volunteer_applications = db.relationship('VolunteerApplication', backref='volunteer', lazy=True)
     redeemed_rewards = db.relationship('UserReward', backref='user', lazy=True)
+
+    # Override Flask-Login's is_active property to use our account_active field
+    @property
+    def is_active(self):
+        """Override Flask-Login's is_active to use our account_active field"""
+        return self.account_active
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

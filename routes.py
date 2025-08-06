@@ -1545,10 +1545,10 @@ def toggle_user_status(user_id):
         return redirect(request.referrer or url_for('admin.users'))
 
     # Toggle active status
-    user.is_active = not user.is_active
+    user.account_active = not user.account_active
     db.session.commit()
 
-    status = 'activated' if user.is_active else 'deactivated'
+    status = 'activated' if user.account_active else 'deactivated'
     flash(f'User {user.get_full_name()} has been {status}.', 'success')
     return redirect(request.referrer or url_for('admin.users'))
 
