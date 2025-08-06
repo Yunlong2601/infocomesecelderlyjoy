@@ -118,7 +118,7 @@
 // Add confirmation dialog for extra safety
 document.querySelector('form').addEventListener('submit', function(e) {
     const userName = "{{ user.get_full_name() or user.username or user.email }}";
-    if (!confirm(`Are you absolutely sure you want to terminate the account for ${userName}? This action cannot be undone.`)) {
+    if (!confirm(`Double-check: Do you want to permanently delete the account for ${userName}?\n\nAfter you click OK:\n• ${userName} will lose access immediately\n• All their data will be permanently deleted\n• This action cannot be undone\n• You cannot restore this account later\n\nClick OK to delete account or Cancel to go back.`)) {
         e.preventDefault();
     }
 });

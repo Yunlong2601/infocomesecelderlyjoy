@@ -24,7 +24,7 @@
                                 <br>
                                 <a href="{{ url_for('profile.delete_picture') }}" 
                                    class="btn btn-sm btn-outline-danger" 
-                                   onclick="return confirm('Are you sure you want to remove your profile picture?')">
+                                   onclick="return confirm('Double-check: Do you want to remove your profile picture?\n\nAfter you click OK:\n• Your current picture will be deleted\n• You will need to upload a new one if you want a picture\n• This cannot be undone\n\nClick OK to remove picture or Cancel to keep it.')">
                                     <i class="fas fa-trash me-1"></i>Remove Picture
                                 </a>
                             {% else %}
