@@ -182,9 +182,7 @@ class EventRSVP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    status = db.Column(db.String(20), default='confirmed')  # confirmed, cancelled
-    rsvp_date = db.Column(db.DateTime, default=datetime.utcnow)
-    attendance_confirmed = db.Column(db.Boolean, default=False)  # For reward points
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Unique constraint to prevent duplicate RSVPs
     __table_args__ = (db.UniqueConstraint('user_id', 'event_id', name='unique_user_event_rsvp'),)
