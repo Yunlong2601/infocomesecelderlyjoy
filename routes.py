@@ -156,7 +156,7 @@ def index():
 
 @main_bp.route('/profile')
 @login_required
-def profile():
+def main_profile():
     """Redirect to appropriate dashboard based on user type"""
     User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
     
@@ -1112,7 +1112,7 @@ def dashboard():
 @organizer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 @require_organizer
-def profile():
+def organizer_profile():
     """Organizer profile management"""
 
     form = EditProfileForm()
@@ -1216,7 +1216,7 @@ volunteer_bp = Blueprint('volunteer', __name__, url_prefix='/volunteer')
 @volunteer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 @require_volunteer
-def profile():
+def volunteer_profile():
     """Volunteer profile management"""
 
     form = EditProfileForm()
