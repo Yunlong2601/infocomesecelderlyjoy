@@ -140,7 +140,7 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        login_identifier = sanitize_user_input(form.nric.data.strip(), 100)
+        login_identifier = sanitize_user_input(form.nric.data.strip())
         
         # Comprehensive authentication validation (OWASP #7)
         auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
