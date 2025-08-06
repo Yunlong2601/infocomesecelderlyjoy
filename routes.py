@@ -849,14 +849,14 @@ def edit():
     form = ElderlyProfileForm()
 
     if request.method == 'POST':
-        app.logger.info(f"Profile edit POST request received for user {current_user.id}")
-        app.logger.info(f"Form data: {request.form}")
-        app.logger.info(f"Form validation: {form.validate()}")
+        current_app.logger.info(f"Profile edit POST request received for user {current_user.id}")
+        current_app.logger.info(f"Form data: {request.form}")
+        current_app.logger.info(f"Form validation: {form.validate()}")
         if form.errors:
-            app.logger.error(f"Form errors: {form.errors}")
+            current_app.logger.error(f"Form errors: {form.errors}")
 
     if form.validate_on_submit():
-        app.logger.info(f"Profile form validated successfully for user {current_user.id}")
+        current_app.logger.info(f"Profile form validated successfully for user {current_user.id}")
         
         # Handle profile picture upload
         if form.profile_picture.data:
@@ -876,7 +876,7 @@ def edit():
                 # Save the file
                 file.save(file_path)
                 current_user.profile_picture = f"uploads/profile_pictures/{unique_filename}"
-                app.logger.info(f"Profile picture uploaded: {unique_filename}")
+                current_app.logger.info(f"Profile picture uploaded: {unique_filename}")
 
         # Update profile fields
         current_user.full_name = form.full_name.data
@@ -886,12 +886,12 @@ def edit():
 
         try:
             db.session.commit()
-            app.logger.info(f"Profile updated successfully for user {current_user.id}")
+            current_app.logger.info(f"Profile updated successfully for user {current_user.id}")
             flash('Profile updated successfully!', 'success')
-            return redirect(url_for('profile.settings'))
+            return redirect(url_for('profile.edit'))  # Return to same page with saved changes
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Database error updating profile: {e}")
+            current_app.logger.error(f"Database error updating profile: {e}")
             flash('Error updating profile. Please try again.', 'danger')
 
     # Populate form with current user data
