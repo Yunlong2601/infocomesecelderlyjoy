@@ -12,7 +12,17 @@ Preferred communication style: Simple, everyday language.
 The application features an elderly-friendly light theme designed for enhanced readability, utilizing high-contrast colors, larger fonts, white backgrounds with dark text, and improved button sizing and spacing. The design emphasizes accessibility, with a mobile-first approach and large, accessible UI elements. Jinja2 templates with Bootstrap 5 are used, along with Font Awesome for consistent iconography.
 
 ### Technical Implementations
-The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. Security measures include Werkzeug for password hashing and comprehensive OWASP Top 10 protections. Sensitive data like NRIC and phone numbers are encrypted using AES-256, while security answers are hashed. The system implements a comprehensive Role-Based Access Control (RBAC) with multi-layer security architecture, including authentication, session integrity, rate limiting, authorization, and ownership validation. This ensures enterprise-grade security, preventing broken access control, cryptographic failures, injection attacks, and other common vulnerabilities. Role-specific homepage experiences are provided for elderly users, volunteers, and organizers, along with a complete admin system for database and user management.
+The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. 
+
+**Comprehensive Security System**: All security features are consolidated in `comprehensive_security_system.py` for easy code walkthrough, including:
+- Multi-Factor Authentication (2FA) with email-based verification
+- Role-Based Access Control (RBAC) with fine-grained permissions
+- Session Security with integrity validation and hijacking protection
+- Data Encryption (AES-256) for sensitive data like NRIC and phone numbers
+- Security Middleware with rate limiting and attack detection
+- OWASP Top 10 protection with comprehensive logging and monitoring
+
+The system implements enterprise-grade security preventing broken access control, cryptographic failures, injection attacks, and other common vulnerabilities. Role-specific homepage experiences are provided for elderly users, volunteers, and organizers, along with a complete admin system for database and user management.
 
 ### Feature Specifications
 The application supports a role-based user system with distinct flows for elderly, organizers, and volunteers. It includes dynamic registration, comprehensive profile management (including profile picture uploads and secure password/security question management), and personalized email notifications. Event management features include full CRUD operations for events, an approval workflow for events, RSVP functionality for community members, and a volunteer application system with capacity management. The admin system allows for user management, event approval/rejection, and account termination with data cascade deletion.
