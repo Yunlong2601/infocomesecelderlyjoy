@@ -21,6 +21,24 @@ body {
     pointer-events: auto !important;
 }
 
+/* Large redeem buttons for better accessibility */
+.btn-lg {
+    padding: 1rem 1.5rem !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    border-radius: 0.5rem !important;
+    min-height: 3.5rem !important;
+}
+
+/* Reward button specific styling */
+.card-footer .btn {
+    padding: 1rem 1.5rem !important;
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    min-height: 3.5rem !important;
+    border-radius: 0.5rem !important;
+}
+
 /* Enhanced Browse Events button visibility */
 .btn-primary:hover {
     transform: translateY(-3px) !important;
@@ -536,4 +554,4 @@ h1, h2, h3, h4, h5, h6 {
     border: 2px solid #dee2e6;
     color: #495057;
     font-weight: 500;
-}
+}/* Force cache refresh - Wed Aug  6 07:28:10 AM UTC 2025 */
