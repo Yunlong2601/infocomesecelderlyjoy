@@ -140,68 +140,36 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        login_identifier = sanitize_user_input(form.nric.data.strip())
+        login_identifier = form.nric.data.strip() if form.nric.data else ""
         
-        # Comprehensive authentication validation (OWASP #7)
-        auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
-            login_identifier, request.remote_addr
-        )
-        if not auth_valid:
-            OWASPSecurityValidator.log_security_event(
-                'RATE_LIMIT_EXCEEDED', 
-                f'Login rate limit exceeded for {login_identifier}',
-                severity='WARNING'
-            )
-            flash('Too many login attempts. Please try again in 15 minutes.', 'danger')
+        if not login_identifier:
+            flash('Please enter your login information.', 'danger')
             return render_template('auth/login.html', form=form)
         
-        # Check if it's an email (contains @) or NRIC/username using secure ORM queries
+        # Find user by email, username, or NRIC
+        user = None
         if '@' in login_identifier:
-            # Email login - use secure ORM query
-            user = User.safe_query_by_email(login_identifier)
+            user = User.query.filter_by(email=login_identifier).first()
         else:
-            # NRIC/username login - use secure ORM queries
-            user = User.safe_query_by_nric(login_identifier)
+            user = User.query.filter_by(username=login_identifier).first()
             if not user:
-                user = User.query.filter_by(username=login_identifier).first()
-        
-        # Validate session security (OWASP #2 Cryptographic Failures)
-        session_valid, session_message = OWASPSecurityValidator.validate_session_security()
-        if not session_valid:
-            session.clear()
-            flash('Session expired. Please log in again.', 'warning')
-            return redirect(url_for('auth.login'))
+                user = User.query.filter_by(nric=login_identifier).first()
         
         if user and user.check_password(form.password.data):
-            if user.user_type == 'elderly':
-                # Initialize secure session for elderly users
-                session_manager.initialize_session(user.id)
-                session['pending_user_id'] = user.id
-                return redirect(url_for('auth.two_factor'))
+            login_user(user, remember=False)
+            flash(f'Welcome back, {user.get_display_name()}!', 'success')
+            
+            # Redirect based on user type
+            if user.user_type == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif user.user_type == 'organizer':
+                return redirect(url_for('organizer.dashboard'))
+            elif user.user_type == 'volunteer':
+                return redirect(url_for('volunteer.dashboard'))
             else:
-                # For organizers and volunteers, use email 2FA
-                verification = EmailVerification.create_verification(
-                    user_id=user.id,
-                    email=user.email,
-                    purpose='login'
-                )
-                
-                if send_verification_email(user.email, verification.verification_code, 'login', user.get_full_name()):
-                    session['pending_user_id'] = user.id
-                    session['pending_login_email'] = user.email
-                    session['verification_id'] = verification.id
-                    flash('Please check your email for the verification code.', 'info')
-                    return redirect(url_for('auth.verify_email_login'))
-                else:
-                    flash('Failed to send verification email. Please try again.', 'danger')
+                return redirect(url_for('main.index'))
         else:
-            # Log failed login attempt (Logging and Monitoring)
-            SecurityMonitoring.log_security_event(
-                'FAILED_LOGIN',
-                f'Failed login attempt for {login_identifier}',
-                ip_address=request.remote_addr
-            )
-            flash('Invalid email/NRIC or password. Please try again.', 'danger')
+            flash('Invalid login credentials. Please try again.', 'danger')
     
     return render_template('auth/login.html', form=form)
 
