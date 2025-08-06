@@ -300,9 +300,15 @@ class RBACSecurityMiddleware:
             
             # Check session timeout
             if 'last_activity' in session:
-                last_activity = datetime.fromisoformat(session['last_activity'])
-                if datetime.utcnow() - last_activity > timedelta(hours=8):
-                    return False
+                try:
+                    last_activity_str = session['last_activity']
+                    if isinstance(last_activity_str, str):
+                        last_activity = datetime.fromisoformat(last_activity_str)
+                        if datetime.utcnow() - last_activity > timedelta(hours=8):
+                            return False
+                except (ValueError, TypeError):
+                    # Invalid datetime format, reset session activity
+                    pass
             
             # Update session tracking
             session['last_activity'] = datetime.utcnow().isoformat()
@@ -366,7 +372,8 @@ class RBACSecurityMiddleware:
             'active_sessions': len(self.request_patterns),
             'recent_threats': len([
                 event for event in self.security_events
-                if datetime.fromisoformat(event['timestamp']) > 
+                if 'timestamp' in event and isinstance(event['timestamp'], str) and
+                   datetime.fromisoformat(event['timestamp']) > 
                    datetime.utcnow() - timedelta(hours=1)
             ])
         }
