@@ -10,6 +10,17 @@ body {
     min-height: 100vh;
 }
 
+/* Ensure buttons are clickable */
+.btn {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+}
+
+.btn:hover {
+    pointer-events: auto !important;
+}
+
 /* Modern navbar with glass effect */
 .navbar {
     background: rgba(255,255,255,0.95) !important;
