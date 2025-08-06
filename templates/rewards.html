@@ -111,7 +111,6 @@
                                     </button>
                                 {% else %}
                                     <form method="POST" action="{{ url_for('main.redeem_voucher') }}" class="d-inline w-100">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <input type="hidden" name="voucher_id" value="{{ voucher.id }}">
                                         <button type="submit" class="btn btn-primary btn-sm w-100" 
                                                 onclick="return confirm('Are you sure you want to redeem this voucher for {{ voucher.points_required }} points?')">

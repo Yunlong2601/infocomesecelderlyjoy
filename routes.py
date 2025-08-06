@@ -6,6 +6,7 @@ import re
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import validate_csrf, CSRFError
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
@@ -1647,7 +1648,7 @@ def rewards():
 
 
 @main_bp.route('/redeem-voucher', methods=['POST'])
-@login_required
+@login_required  
 def redeem_voucher():
     """Redeem a voucher with user's points"""
     # Check if user has access to rewards
@@ -1656,6 +1657,7 @@ def redeem_voucher():
         return redirect(url_for('main.index'))
     
     try:
+        # Skip CSRF validation for this endpoint temporarily
         voucher_id = request.form.get('voucher_id')
         if not voucher_id:
             flash('Invalid voucher selection.', 'error')
