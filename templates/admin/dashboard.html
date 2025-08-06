@@ -199,7 +199,7 @@
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="mb-0">{{ user.get_full_name() }}</h6>
                                             <small class="text-muted">
-                                                {{ user.user_type.title() }} • {{ user.created_at.strftime('%b %d') }}
+                                                {{ user.user_type.title() }} • {{ user.created_at.strftime('%b %d') if user.created_at else 'N/A' }}
                                             </small>
                                         </div>
                                     </div>
@@ -232,7 +232,7 @@
                                                 <span class="badge bg-{{ 'success' if event.status == 'approved' else 'warning' if event.status == 'pending' else 'danger' }}">
                                                     {{ event.status.title() }}
                                                 </span>
-                                                • {{ event.created_at.strftime('%b %d') }}
+                                                • {{ event.created_at.strftime('%b %d') if event.created_at else 'N/A' }}
                                             </small>
                                         </div>
                                     </div>
