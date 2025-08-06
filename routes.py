@@ -848,20 +848,35 @@ def edit():
 
     form = ElderlyProfileForm()
 
+    if request.method == 'POST':
+        app.logger.info(f"Profile edit POST request received for user {current_user.id}")
+        app.logger.info(f"Form data: {request.form}")
+        app.logger.info(f"Form validation: {form.validate()}")
+        if form.errors:
+            app.logger.error(f"Form errors: {form.errors}")
+
     if form.validate_on_submit():
+        app.logger.info(f"Profile form validated successfully for user {current_user.id}")
+        
         # Handle profile picture upload
         if form.profile_picture.data:
             file = form.profile_picture.data
-            filename = secure_filename(file.filename)
-            # Create unique filename to prevent conflicts
-            file_ext = filename.rsplit('.', 1)[1].lower()
-            unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
-            file_path = os.path.join('static', 'uploads', 'profile_pictures',
-                                     unique_filename)
+            if file.filename:  # Only process if there's actually a file
+                filename = secure_filename(file.filename)
+                # Create unique filename to prevent conflicts
+                file_ext = filename.rsplit('.', 1)[1].lower()
+                unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
+                
+                # Ensure upload directory exists
+                upload_dir = os.path.join('static', 'uploads', 'profile_pictures')
+                os.makedirs(upload_dir, exist_ok=True)
+                
+                file_path = os.path.join(upload_dir, unique_filename)
 
-            # Save the file
-            file.save(file_path)
-            current_user.profile_picture = f"uploads/profile_pictures/{unique_filename}"
+                # Save the file
+                file.save(file_path)
+                current_user.profile_picture = f"uploads/profile_pictures/{unique_filename}"
+                app.logger.info(f"Profile picture uploaded: {unique_filename}")
 
         # Update profile fields
         current_user.full_name = form.full_name.data
@@ -869,19 +884,26 @@ def edit():
         current_user.event_interests = json.dumps(
             form.event_interests.data) if form.event_interests.data else None
 
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('profile.settings'))
+        try:
+            db.session.commit()
+            app.logger.info(f"Profile updated successfully for user {current_user.id}")
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('profile.settings'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Database error updating profile: {e}")
+            flash('Error updating profile. Please try again.', 'danger')
 
     # Populate form with current user data
-    form.full_name.data = current_user.full_name
-    form.language_preference.data = current_user.language_preference
-    if current_user.event_interests:
-        try:
-            form.event_interests.data = json.loads(
-                current_user.event_interests)
-        except:
-            form.event_interests.data = []
+    if request.method == 'GET':
+        form.full_name.data = current_user.full_name
+        form.language_preference.data = current_user.language_preference
+        if current_user.event_interests:
+            try:
+                form.event_interests.data = json.loads(
+                    current_user.event_interests)
+            except:
+                form.event_interests.data = []
 
     return render_template('profile/edit.html', form=form)
 
