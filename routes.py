@@ -1618,9 +1618,13 @@ def terminate_account(user_id):
 
 @main_bp.route('/rewards')
 @login_required
-@require_user_type(['elderly', 'volunteer'])
 def rewards():
     """Display available vouchers and user's redeemed vouchers"""
+    # Check if user has access to rewards
+    if not current_user.is_authenticated or current_user.user_type not in ['elderly', 'volunteer']:
+        flash('Access denied. Rewards are only available for community members and volunteers.', 'warning')
+        return redirect(url_for('main.index'))
+    
     try:
         # Get available vouchers
         vouchers = RewardVoucher.query.filter_by(is_active=True).order_by(RewardVoucher.points_required).all()
@@ -1633,19 +1637,23 @@ def rewards():
                              redeemed_vouchers=redeemed_vouchers)
     except Exception as e:
         flash('Error loading rewards page. Please try again.', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
 
 @main_bp.route('/redeem-voucher', methods=['POST'])
 @login_required
-@require_user_type(['elderly', 'volunteer'])
 def redeem_voucher():
     """Redeem a voucher with user's points"""
+    # Check if user has access to rewards
+    if not current_user.is_authenticated or current_user.user_type not in ['elderly', 'volunteer']:
+        flash('Access denied. Only community members and volunteers can redeem vouchers.', 'warning')
+        return redirect(url_for('main.index'))
+    
     try:
         voucher_id = request.form.get('voucher_id')
         if not voucher_id:
             flash('Invalid voucher selection.', 'error')
-            return redirect(url_for('rewards'))
+            return redirect(url_for('main.rewards'))
         
         # Redeem the voucher
         redemption, message = UserReward.redeem_voucher(current_user.id, voucher_id)
@@ -1666,11 +1674,11 @@ def redeem_voucher():
         else:
             flash(message, 'error')
         
-        return redirect(url_for('rewards'))
+        return redirect(url_for('main.rewards'))
     
     except Exception as e:
         flash('Error processing voucher redemption. Please try again.', 'error')
-        return redirect(url_for('rewards'))
+        return redirect(url_for('main.rewards'))
 
 
 def award_event_points(user_id, event_id, participation_type='attendance'):
