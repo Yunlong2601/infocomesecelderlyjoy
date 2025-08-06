@@ -274,9 +274,10 @@ def two_factor():
         user_answer = form.security_answer.data
         
         if user and user.check_security_answer(question_number, user_answer):
-            # 2FA successful - log in the user
-            login_user(user)
+            # 2FA successful - log in the user with remember option
+            login_user(user, remember=True)
             session['user_id'] = user.id
+            session.permanent = True  # Make session permanent
             welcome_name = user.get_full_name()
             
             # Log successful authentication (Security Monitoring)
@@ -289,11 +290,12 @@ def two_factor():
             
             flash(f'Welcome back, {welcome_name}! Security verification successful.', 'success')
             
-            # Clear session data
+            # Clear 2FA session data but keep login session
             session.pop('pending_user_id', None)
             session.pop('selected_question', None)
             session.pop('correct_answer', None)
             session.pop('question_key', None)
+            session.pop('security_question_number', None)
             
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
@@ -517,10 +519,11 @@ def verify_email_login():
             # Mark verification as used
             verification.mark_used()
             
-            # Log in the user
+            # Log in the user with remember option
             user = User.query.get(user_id)
-            login_user(user)
+            login_user(user, remember=True)
             session['user_id'] = user.id
+            session.permanent = True  # Make session permanent
             
             # Send success notification
             send_login_success_notification(user.email, user.get_full_name())
