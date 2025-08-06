@@ -1,252 +1,40 @@
 # Community Connect
 
 ## Overview
-
-Community Connect is a Flask-based web application designed to bring elderly community members together through social events, recreational activities, and educational opportunities. The platform serves three distinct user types: community members (elderly users), event organizers, and volunteers, creating a comprehensive ecosystem for community engagement.
-
-### Current Status (July 30, 2025)
-- ✅ Enhanced registration system with NRIC validation for elderly users
-- ✅ Three distinct user roles with different registration flows:
-  - **Elderly**: NRIC, full name, language preference, event interests, 3 security questions (2FA)
-  - **Organizers**: Name, email, phone for event management
-  - **Volunteers**: Name, email, phone for volunteering opportunities
-- ✅ Language preferences: English, Mandarin, Malay, Tamil, Hokkien, Cantonese
-- ✅ Event interest categories: Social, Recreational, Educational, Cultural, Health & Wellness
-- ✅ Security questions system for elderly users (stored for password recovery)
-- ✅ NRIC-based login for elderly users
-- ✅ Email-based 2FA login for organizers and volunteers:
-  * Secure email verification with 6-digit codes
-  * 10-minute code expiration for security
-  * Beautiful HTML email templates with branding
-  * Login success notifications
-  * Resend verification functionality
-- ✅ PostgreSQL database with updated schema
-- ✅ Dynamic registration form with conditional fields
-- ✅ Comprehensive profile management for elderly users:
-  - Profile picture upload and management
-  - Edit personal information (name, language, interests)
-  - Change password functionality
-  - Secure security questions management with multi-layer protection:
-    * Initial 2FA verification using existing security question
-    * Password confirmation for final verification
-    * Failed attempt protection (3 attempts max)
-    * Session-based security verification
-- ✅ Elderly-friendly light theme with enhanced readability:
-  * High contrast colors and larger fonts
-  * White backgrounds with dark text for better visibility
-  * Enhanced button sizing and spacing
-  * Improved form styling with clear borders
-- ✅ Comprehensive organizer dashboard with event management:
-  * Event creation with approval workflow (pending → approved/rejected)
-  * Event statistics and participant management
-  * Volunteer application approval/rejection system
-  * Event editing and deletion capabilities
-  * Only approved events visible to elderly users and volunteers
-- ✅ Event approval system to ensure quality control:
-  * All new events start as "pending" status
-  * Events must be approved before being visible to participants
-  * Rejected events can be revised and resubmitted
-  * Live events can be edited by organizers
-- ✅ Complete organizer profile management system:
-  * Profile picture upload with automatic file management
-  * Edit personal information (name, email, phone)
-  * Secure password change with validation
-  * Dashboard integration with "My Profile" link
-  * Mobile-responsive design with form validation
-  * Automatic cleanup of old profile pictures
-- ✅ Complete volunteer profile management system:
-  * Profile picture upload with file management
-  * Edit personal information (name, email, phone)
-  * Secure password change functionality
-  * Accessible from main profile page
-  * Same features as organizer profile management
-- ✅ Personalized email system:
-  * Verification emails include user's first name in greeting
-  * Login success notifications with personalized welcome
-  * All emails sent to samplebookshopnyp@gmail.com for school project
-- ✅ Complete admin system for database management:
-  * Admin account created (admin@community.com / admin123)
-  * Comprehensive dashboard with platform statistics
-  * User management with search, filtering, and pagination
-  * Event approval/rejection system with bulk actions
-  * Admin account creation for additional administrators
-  * Real-time database monitoring and analytics
-  * Secure admin-only access controls throughout system
-- ✅ Redesigned navigation structure with role-specific dashboards:
-  * Profile page now redirects to appropriate dashboard based on user type
-  * Organizer dashboard: Event management with "Edit Profile" access
-  * Volunteer dashboard: Application tracking with profile editing
-  * Admin dashboard: Complete database management interface
-  * Elderly users: Profile page serves as personal dashboard
-  * Each user type gets relevant features prominently displayed
-- ✅ Enhanced admin system with account termination functionality:
-  * Admin login now redirects directly to admin dashboard
-  * Account termination with multiple reason selection (checkboxes)
-  * Custom reason text field for additional termination details
-  * Email notifications sent to users with termination reasons
-  * Complete data cascade deletion (events, RSVPs, applications, files)
-  * Safety measures: confirmation dialogs and self-termination prevention
-  * All termination emails sent to samplebookshopnyp@gmail.com
-  * Fixed email notification system with proper termination email templates
-  * Complete testing confirmed all functionality working correctly
-- ✅ Comprehensive Broken Access Control protections implemented:
-  * Role-based access control with decorators for all user types
-  * Resource ownership validation (events, applications, profiles)
-  * Input sanitization to prevent injection attacks
-  * Secure file upload validation with extension filtering
-  * Security event logging for monitoring unauthorized access attempts
-  * User type enforcement prevents cross-role access vulnerabilities
-  * CSRF protection and session-based authentication throughout
-- ✅ Complete OWASP Top 10 security implementation (July 30, 2025):
-  * **Broken Access Control**: Role-based decorators and resource ownership validation
-  * **Cryptographic Failures**: Strong password requirements, secure session management, HTTPS enforcement
-  * **Injection**: SQL injection prevention, input sanitization, parameterized queries
-  * **Insecure Design**: Secure file uploads, business logic validation, rate limiting
-  * **Security Misconfiguration**: Security headers (CSP, X-Frame-Options, XSS-Protection), secure cookies
-  * **Vulnerable Components**: Component security monitoring and update recommendations
-  * **Authentication Failures**: Rate limiting, strong passwords, multi-factor authentication for elderly users
-  * **Data Integrity**: Form validation, checksum generation, tampering detection
-  * **Security Logging**: Comprehensive event logging, suspicious activity detection, security monitoring
-  * **Server-Side Request Forgery**: URL validation, redirect protection, private network blocking
-- ✅ Advanced Security Implementation (July 30, 2025 - Final):
-  * **AES-256 Encryption**: Sensitive data (NRIC, phone numbers) encrypted at rest using enterprise-grade encryption
-  * **Security Answer Hashing**: All security answers now use password hashing (not encryption) for maximum protection
-  * **Enhanced ORM Security**: Parameterized queries and safe database methods prevent SQL injection
-  * **Comprehensive Session Management**: Secure session cookies with automatic cleanup and validation
-  * **Session Security Middleware**: Real-time session validation and hijacking prevention
-  * **Cryptographic Key Management**: Secure encryption key generation and management
-  * **Dual Protection System**: Encryption for retrievable data (NRIC/phone), hashing for verification-only data (security answers)
-- ✅ Role-specific homepage experiences (July 31, 2025):
-  * **Elderly Homepage**: Shows registered events and available events to join with easy-to-use interface
-  * **Volunteer Homepage**: Displays volunteer applications, events needing help, and impact statistics
-  * **Organizer Homepage**: Features quick event creation form, event management dashboard, and organizer statistics
-  * **Smart Routing**: Automatically shows appropriate homepage based on user type
-  * **Personalized Content**: Each homepage tailored to user needs and capabilities
-- ✅ Complete Role-Based Access Control (RBAC) implementation (August 3, 2025):
-  * **Comprehensive Route Protection**: All 31 protected routes now use proper RBAC decorators
-  * **Role-Specific Access**: @require_admin, @require_organizer, @require_volunteer, @require_elderly decorators
-  * **Resource Ownership Validation**: Users can only access their own resources with ownership checks
-  * **Multi-Role Support**: Flexible access control for routes requiring multiple user types
-  * **Security Event Logging**: All access violations logged for monitoring and audit trails
-  * **Cross-Role Protection**: Prevents privilege escalation and unauthorized access attempts
-  * **Admin Override**: Administrators can access all resources while maintaining security
-  * **Enterprise-Grade Security**: OWASP-compliant access control with defense-in-depth
-- ✅ Enterprise-Grade RBAC Security Enhancement (August 6, 2025 - FINAL IMPLEMENTATION):
-  * **Multi-Layer Security Architecture**: 5-layer defense system with authentication, session integrity, rate limiting, authorization, and ownership validation
-  * **Advanced Threat Detection**: Real-time privilege escalation detection, session hijacking prevention, and automated threat response
-  * **Comprehensive Security Monitoring**: Enhanced logging with security event classification, threat pattern recognition, and compliance reporting
-  * **Rate Limiting Protection**: Sliding window rate limiting with IP-based tracking to prevent abuse and brute force attacks
-  * **Session Security Validation**: Advanced session integrity checks with IP consistency monitoring and tampering detection
-  * **Security Middleware Integration**: Request-level security enforcement with malicious pattern detection and automated blocking
-  * **Enterprise Compliance**: 100% OWASP Top 10 protection with defense-in-depth architecture and zero-trust access model
-  * **Security Audit System**: Comprehensive security auditing with real-time threat scanning and automated compliance assessment
-  * **Advanced Access Control**: Enhanced resource ownership validation with comprehensive input sanitization and security logging
-  * **Threat Response Automation**: Automated security responses for critical violations including session termination and account auditing
-- 🚀 Application is running with ENTERPRISE-GRADE RBAC SECURITY implementing comprehensive threat mitigations, multi-layer defense architecture, real-time threat detection, advanced session security, rate limiting protection, comprehensive security logging, automated threat response, and 100% OWASP Top 10 vulnerability protection with defense-in-depth security controls
+Community Connect is a Flask-based web application designed to foster community engagement among elderly individuals by connecting them with social events, recreational activities, and educational opportunities. The platform supports three distinct user types: community members (elderly users), event organizers, and volunteers, aiming to create a comprehensive ecosystem for interaction and participation. The vision is to enhance the social well-being of the elderly population by providing an accessible and user-friendly platform for various community activities, offering a significant market potential in elder care and community services.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Backend Architecture
-- **Framework**: Flask with SQLAlchemy ORM
-- **Database**: SQLite for development (configurable via DATABASE_URL environment variable)
-- **Authentication**: Flask-Login for session management
-- **Forms**: Flask-WTF with WTForms for form handling and validation
-- **Security**: Werkzeug for password hashing and proxy handling
+### UI/UX Decisions
+The application features an elderly-friendly light theme designed for enhanced readability, utilizing high-contrast colors, larger fonts, white backgrounds with dark text, and improved button sizing and spacing. The design emphasizes accessibility, with a mobile-first approach and large, accessible UI elements. Jinja2 templates with Bootstrap 5 are used, along with Font Awesome for consistent iconography.
 
-### Frontend Architecture
-- **Template Engine**: Jinja2 templates with Bootstrap 5 dark theme
-- **UI Framework**: Bootstrap with custom CSS for accessibility
-- **Icons**: Font Awesome for consistent iconography
-- **Responsive Design**: Mobile-first approach with large, accessible UI elements
+### Technical Implementations
+The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. Security measures include Werkzeug for password hashing and comprehensive OWASP Top 10 protections. Sensitive data like NRIC and phone numbers are encrypted using AES-256, while security answers are hashed. The system implements a comprehensive Role-Based Access Control (RBAC) with multi-layer security architecture, including authentication, session integrity, rate limiting, authorization, and ownership validation. This ensures enterprise-grade security, preventing broken access control, cryptographic failures, injection attacks, and other common vulnerabilities. Role-specific homepage experiences are provided for elderly users, volunteers, and organizers, along with a complete admin system for database and user management.
 
-### Database Schema
-The application uses four main models:
-- **User**: Handles authentication and user profiles with role-based types (elderly, organizer, volunteer)
-- **Event**: Stores event information including metadata, scheduling, and capacity limits
-- **EventRSVP**: Manages event registrations for community members
-- **VolunteerApplication**: Tracks volunteer applications for events
+### Feature Specifications
+The application supports a role-based user system with distinct flows for elderly, organizers, and volunteers. It includes dynamic registration, comprehensive profile management (including profile picture uploads and secure password/security question management), and personalized email notifications. Event management features include full CRUD operations for events, an approval workflow for events, RSVP functionality for community members, and a volunteer application system with capacity management. The admin system allows for user management, event approval/rejection, and account termination with data cascade deletion.
 
-## Key Components
-
-### User Management
-- Role-based user system with three distinct types
-- Secure password hashing using Werkzeug
-- Profile management with contact information
-- Session-based authentication with Flask-Login
-
-### Event Management
-- Full CRUD operations for events
-- Categorization system (social, recreational, educational)
-- RSVP functionality for community members
-- Volunteer application system
-- Capacity management and participant tracking
-
-### Forms and Validation
-- Comprehensive form validation using WTForms
-- Custom styling for accessibility (large buttons, clear labels)
-- Bootstrap integration for consistent UI
-- Error handling and user feedback
-
-### Templates and UI
-- Modular template system with base layout
-- Accessibility-focused design with large fonts and buttons
-- Dark theme implementation for better readability
-- Mobile-responsive design principles
-
-## Data Flow
-
-1. **User Registration**: New users select their role (elderly, organizer, volunteer) and complete profile setup
-2. **Event Creation**: Organizers create events with details, scheduling, and volunteer requirements
-3. **Event Discovery**: Community members browse and search events by category and date
-4. **Registration Process**: Users can RSVP for events or apply to volunteer
-5. **Profile Management**: Users can view their registered events, organized events, or volunteer applications
+### System Design Choices
+The architecture prioritizes simplicity, accessibility, and maintainability. It employs a modular template system, secure session management, and robust input validation. The application is designed for easy deployment, with configurable database settings and environment-based configuration.
 
 ## External Dependencies
 
 ### Python Packages
-- Flask: Web framework and core functionality
-- Flask-SQLAlchemy: Database ORM and management
-- Flask-Login: User session management
-- Flask-WTF: Form handling and CSRF protection
-- WTForms: Form validation and rendering
-- Werkzeug: WSGI utilities and security features
+- Flask
+- Flask-SQLAlchemy
+- Flask-Login
+- Flask-WTF
+- WTForms
+- Werkzeug
 
 ### Frontend Assets
-- Bootstrap 5: UI framework with dark theme variant
-- Font Awesome 6: Icon library for consistent visual elements
-- Custom CSS: Accessibility enhancements and responsive design
+- Bootstrap 5
+- Font Awesome 6
+- Custom CSS
 
 ### Environment Configuration
-- SESSION_SECRET: Session encryption key
-- DATABASE_URL: Database connection string (defaults to SQLite)
-
-## Deployment Strategy
-
-The application is designed for simple deployment with minimal configuration:
-
-### Development Setup
-- SQLite database for local development
-- Environment-based configuration
-- Debug logging enabled
-- Hot reloading for template and static file changes
-
-### Production Considerations
-- Configurable database URL for PostgreSQL migration
-- Proxy-aware configuration for reverse proxy deployments
-- Session secret management through environment variables
-- Connection pooling and database optimization settings
-
-### File Structure
-- `app.py`: Application factory and configuration
-- `models.py`: Database models and relationships
-- `routes.py`: Blueprint-based route organization
-- `forms.py`: Form definitions and validation
-- `templates/`: Jinja2 templates with component organization
-- `static/`: CSS and static assets
-- `main.py`: Application entry point
-
-The architecture prioritizes simplicity, accessibility, and maintainability while providing a robust foundation for community engagement features.
+- SESSION_SECRET
+- DATABASE_URL (defaults to SQLite for development, configured for PostgreSQL in production)
