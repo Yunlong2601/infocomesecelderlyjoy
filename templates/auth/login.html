@@ -30,9 +30,9 @@
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="card border-secondary user-type-card" style="cursor: pointer;" onclick="selectUserType('other')">
+                                <div class="card border-success user-type-card" style="cursor: pointer;" onclick="selectUserType('other')">
                                     <div class="card-body text-center p-3">
-                                        <i class="fas fa-users fa-2x text-secondary mb-2"></i>
+                                        <i class="fas fa-hands-helping fa-2x text-success mb-2"></i>
                                         <h6>Organizer/Volunteer</h6>
                                         <small class="text-muted">Login with email</small>
                                     </div>
@@ -95,13 +95,22 @@
 function selectUserType(type) {
     // Remove active class from all cards
     document.querySelectorAll('.user-type-card').forEach(card => {
-        card.classList.remove('border-primary', 'bg-light');
-        card.classList.add('border-secondary');
+        card.classList.remove('border-primary', 'border-success', 'bg-light');
+        if (card.querySelector('.fa-heart')) {
+            card.classList.add('border-primary');
+        } else {
+            card.classList.add('border-success');
+        }
     });
     
     // Add active class to selected card
-    event.target.closest('.user-type-card').classList.remove('border-secondary');
-    event.target.closest('.user-type-card').classList.add('border-primary', 'bg-light');
+    const selectedCard = event.target.closest('.user-type-card');
+    selectedCard.classList.remove('border-primary', 'border-success');
+    if (type === 'elderly') {
+        selectedCard.classList.add('border-primary', 'bg-light');
+    } else {
+        selectedCard.classList.add('border-success', 'bg-light');
+    }
     
     // Set user type
     document.getElementById('user_type').value = type;
