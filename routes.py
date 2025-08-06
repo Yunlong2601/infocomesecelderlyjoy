@@ -785,8 +785,8 @@ def cancel_rsvp(event_id):
                                      event_id=event_id).first()
 
     # Verify user owns this RSVP
-    if rsvp and not check_resource_ownership(
-            rsvp.user_id, "You can only cancel your own RSVP."):
+    if rsvp and rsvp.user_id != current_user.id:
+        flash("You can only cancel your own RSVP.", 'danger')
         return redirect(url_for('events.detail', event_id=event_id))
 
     if rsvp:
