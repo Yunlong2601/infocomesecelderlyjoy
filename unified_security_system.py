@@ -86,7 +86,7 @@ class EncryptionManager:
     
     def encrypt_data(self, data):
         """Encrypt sensitive data"""
-        if not data:
+        if not data or self._fernet is None:
             return None
         
         try:
@@ -101,7 +101,7 @@ class EncryptionManager:
     
     def decrypt_data(self, encrypted_data):
         """Decrypt sensitive data"""
-        if not encrypted_data:
+        if not encrypted_data or self._fernet is None:
             return None
         
         try:
