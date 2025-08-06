@@ -17,7 +17,11 @@
             </p>
             {% if current_user.is_authenticated %}
             <div class="d-grid gap-2 d-md-block">
-                <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0" style="min-width: 200px;">
+                <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0 shadow-lg" 
+                   style="min-width: 220px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); 
+                          border: none; font-size: 1.4rem; padding: 18px 24px; font-weight: 700;
+                          box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4) !important;
+                          transition: all 0.3s ease;">
                     <i class="fas fa-calendar me-2"></i>Browse Events
                 </a>
                 {% if current_user.user_type == 'elderly' %}
@@ -43,7 +47,11 @@
                 <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0" style="min-width: 200px;">
                     <i class="fas fa-user-plus me-2"></i>Join Today
                 </a>
-                <a href="{{ url_for('events.list') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
+                <a href="{{ url_for('events.list') }}" class="btn btn-primary btn-lg shadow-lg" 
+                   style="min-width: 220px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); 
+                          border: none; font-size: 1.4rem; padding: 18px 24px; font-weight: 700;
+                          box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4) !important;
+                          transition: all 0.3s ease;">
                     <i class="fas fa-calendar me-2"></i>Browse Events
                 </a>
             </div>

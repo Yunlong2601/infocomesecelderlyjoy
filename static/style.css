@@ -21,6 +21,16 @@ body {
     pointer-events: auto !important;
 }
 
+/* Enhanced Browse Events button visibility */
+.btn-primary:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 35px rgba(0, 123, 255, 0.6) !important;
+}
+
+.btn-primary:active {
+    transform: translateY(-1px) !important;
+}
+
 /* Modern navbar with glass effect */
 .navbar {
     background: rgba(255,255,255,0.95) !important;
