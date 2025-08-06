@@ -75,7 +75,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ url_for('events.detail', id=event.id) }}" class="btn btn-outline-primary btn-sm">
+                            <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-eye me-1"></i>View Details
                             </a>
                         </div>
@@ -132,7 +132,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ url_for('events.detail', id=event.id) }}" class="btn btn-success btn-sm">
+                            <a href="{{ url_for('events.detail', event_id=event.id) }}" class="btn btn-success btn-sm">
                                 <i class="fas fa-plus me-1"></i>Join Event
                             </a>
                         </div>
