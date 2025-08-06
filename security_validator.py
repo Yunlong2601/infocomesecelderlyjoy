@@ -143,7 +143,12 @@ class OWASPSecurityValidator:
         # Check session timeout
         last_activity = session.get('last_activity')
         if last_activity:
-            if datetime.now() - datetime.fromisoformat(last_activity) > timedelta(hours=2):
+            if isinstance(last_activity, str):
+                last_activity_dt = datetime.fromisoformat(last_activity)
+            else:
+                last_activity_dt = last_activity
+            
+            if datetime.now() - last_activity_dt > timedelta(hours=2):
                 session.clear()
                 return False, "Session expired"
         
