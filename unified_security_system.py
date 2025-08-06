@@ -328,6 +328,25 @@ class SecurityValidator:
     def __init__(self):
         self.logger = logging.getLogger('security_validator')
     
+    @staticmethod
+    def validate_authentication_attempt(identifier, password, user_type):
+        """Validate authentication attempt"""
+        # Basic validation
+        if not identifier or not password:
+            return False, "Missing credentials"
+        
+        if user_type == 'elderly':
+            # NRIC validation
+            import re
+            if not re.match(r'^[STFG]\d{7}[A-Z]$', identifier.upper()):
+                return False, "Invalid NRIC format"
+        else:
+            # Email validation
+            if '@' not in identifier:
+                return False, "Invalid email format"
+        
+        return True, "Valid credentials format"
+    
     def validate_password_strength(self, password):
         """Validate password meets security requirements"""
         if len(password) < 8:
