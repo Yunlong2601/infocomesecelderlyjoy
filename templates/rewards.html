@@ -263,8 +263,15 @@ function showRedemptionModal(voucherId, title, value, pointsCost, partnerName) {
 }
 
 // Enable/disable redeem button based on checkbox
-document.getElementById('confirmationCheck').addEventListener('change', function() {
-    document.getElementById('finalRedeemBtn').disabled = !this.checked;
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmationCheck = document.getElementById('confirmationCheck');
+    const finalRedeemBtn = document.getElementById('finalRedeemBtn');
+    
+    if (confirmationCheck && finalRedeemBtn) {
+        confirmationCheck.addEventListener('change', function() {
+            finalRedeemBtn.disabled = !this.checked;
+        });
+    }
 });
 </script>
 
