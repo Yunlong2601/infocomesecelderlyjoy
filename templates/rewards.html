@@ -101,20 +101,20 @@
                             </div>
                             <div class="card-footer">
                                 {% if not voucher.is_available %}
-                                    <button class="btn btn-secondary btn-sm w-100" disabled>
-                                        <i class="fas fa-times me-1"></i>Out of Stock
+                                    <button class="btn btn-secondary btn-lg w-100 fw-bold py-3" disabled>
+                                        <i class="fas fa-times me-2"></i>Out of Stock
                                     </button>
                                 {% elif (current_user.reward_points or 0) < voucher.points_required %}
-                                    <button class="btn btn-outline-secondary btn-sm w-100" disabled>
-                                        <i class="fas fa-coins me-1"></i>
+                                    <button class="btn btn-outline-secondary btn-lg w-100 fw-bold py-3" disabled>
+                                        <i class="fas fa-coins me-2"></i>
                                         Need {{ voucher.points_required - (current_user.reward_points or 0) }} more points
                                     </button>
                                 {% else %}
                                     <form method="POST" action="{{ url_for('main.redeem_voucher') }}" class="d-inline w-100">
                                         <input type="hidden" name="voucher_id" value="{{ voucher.id }}">
-                                        <button type="submit" class="btn btn-primary btn-sm w-100" 
+                                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3" 
                                                 onclick="return confirm('Are you sure you want to redeem this voucher for {{ voucher.points_required }} points?')">
-                                            <i class="fas fa-gift me-1"></i>Redeem Now
+                                            <i class="fas fa-gift me-2"></i>Redeem Now
                                         </button>
                                     </form>
                                 {% endif %}
