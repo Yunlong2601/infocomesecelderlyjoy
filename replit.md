@@ -14,7 +14,7 @@ The application features an elderly-friendly light theme designed for enhanced r
 ### Technical Implementations
 The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. 
 
-**Comprehensive Security System**: All security features are consolidated in `comprehensive_security_system.py` for easy code walkthrough, including:
+**Unified Security System**: All security features are consolidated in `unified_security_system.py` for easy code walkthrough, including:
 - Multi-Factor Authentication (2FA) with email-based verification
 - Role-Based Access Control (RBAC) with fine-grained permissions
 - Session Security with integrity validation and hijacking protection
