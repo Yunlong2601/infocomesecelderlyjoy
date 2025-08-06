@@ -147,6 +147,7 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         login_identifier = sanitize_user_input(form.nric.data.strip(), 100)
+        user_type = request.form.get('user_type', '')
         
         # Comprehensive authentication validation (OWASP #7)
         auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
@@ -161,15 +162,24 @@ def login():
             flash('Too many login attempts. Please try again in 15 minutes.', 'danger')
             return render_template('auth/login.html', form=form)
         
-        # Check if it's an email (contains @) or NRIC/username using secure ORM queries
-        if '@' in login_identifier:
-            # Email login - use secure ORM query
-            user = User.safe_query_by_email(login_identifier)
-        else:
-            # NRIC/username login - use secure ORM queries
+        # Route based on user type selection
+        if user_type == 'elderly':
+            # Elderly login with NRIC
             user = User.safe_query_by_nric(login_identifier)
-            if not user:
+        elif user_type == 'other':
+            # Organizer/Volunteer login with email
+            if '@' in login_identifier:
+                user = User.safe_query_by_email(login_identifier)
+            else:
                 user = User.query.filter_by(username=login_identifier).first()
+        else:
+            # Fallback to old logic
+            if '@' in login_identifier:
+                user = User.safe_query_by_email(login_identifier)
+            else:
+                user = User.safe_query_by_nric(login_identifier)
+                if not user:
+                    user = User.query.filter_by(username=login_identifier).first()
         
         # Validate session security (OWASP #2 Cryptographic Failures)
         session_valid, session_message = OWASPSecurityValidator.validate_session_security()
@@ -184,7 +194,7 @@ def login():
                 session_manager.initialize_session(user.id)
                 session['pending_user_id'] = user.id
                 return redirect(url_for('auth.two_factor'))
-            else:
+            elif user.user_type in ['organizer', 'volunteer']:
                 # For organizers and volunteers, use email 2FA
                 verification = EmailVerification.create_verification(
                     user_id=user.id,
@@ -200,6 +210,11 @@ def login():
                     return redirect(url_for('auth.verify_email_login'))
                 else:
                     flash('Failed to send verification email. Please try again.', 'danger')
+            elif user.user_type == 'admin':
+                # Direct login for admin users
+                login_user(user, remember=True)
+                flash('Welcome back, Admin!', 'success')
+                return redirect(url_for('admin.dashboard'))
         else:
             # Log failed login attempt (Logging and Monitoring)
             SecurityMonitoring.log_security_event(

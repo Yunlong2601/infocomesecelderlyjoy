@@ -16,10 +16,36 @@
                 <form method="POST">
                     {{ form.hidden_tag() }}
                     
-                    <div class="mb-3">
-                        {{ form.nric.label(class="form-label fs-5") }}
-                        {{ form.nric() }}
-                        <small class="form-text text-muted">Enter your email or NRIC</small>
+                    <!-- User Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fs-5">I am a:</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card border-primary user-type-card" style="cursor: pointer;" onclick="selectUserType('elderly')">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-heart fa-2x text-primary mb-2"></i>
+                                        <h6>Community Member</h6>
+                                        <small class="text-muted">Login with NRIC</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-secondary user-type-card" style="cursor: pointer;" onclick="selectUserType('other')">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-users fa-2x text-secondary mb-2"></i>
+                                        <h6>Organizer/Volunteer</h6>
+                                        <small class="text-muted">Login with email</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="user_type" id="user_type" value="">
+                    </div>
+                    
+                    <div class="mb-3" id="login-fields" style="display: none;">
+                        <label class="form-label fs-5" id="login-label">NRIC/Email</label>
+                        {{ form.nric(class="form-control form-control-lg", id="login-input", placeholder="Enter your NRIC or email") }}
+                        <small class="form-text text-muted" id="login-help">Enter your NRIC or email</small>
                         {% if form.nric.errors %}
                             <div class="text-danger">
                                 {% for error in form.nric.errors %}
@@ -29,9 +55,9 @@
                         {% endif %}
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-4" id="password-field" style="display: none;">
                         {{ form.password.label(class="form-label fs-5") }}
-                        {{ form.password() }}
+                        {{ form.password(class="form-control form-control-lg") }}
                         {% if form.password.errors %}
                             <div class="text-danger">
                                 {% for error in form.password.errors %}
@@ -41,8 +67,8 @@
                         {% endif %}
                     </div>
 
-                    <div class="d-grid mb-3">
-                        {{ form.submit() }}
+                    <div class="d-grid mb-3" id="submit-button" style="display: none;">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
                     </div>
                 </form>
 
@@ -64,4 +90,41 @@
         </div>
     </div>
 </div>
+
+<script>
+function selectUserType(type) {
+    // Remove active class from all cards
+    document.querySelectorAll('.user-type-card').forEach(card => {
+        card.classList.remove('border-primary', 'bg-light');
+        card.classList.add('border-secondary');
+    });
+    
+    // Add active class to selected card
+    event.target.closest('.user-type-card').classList.remove('border-secondary');
+    event.target.closest('.user-type-card').classList.add('border-primary', 'bg-light');
+    
+    // Set user type
+    document.getElementById('user_type').value = type;
+    
+    // Update form fields based on selection
+    const loginLabel = document.getElementById('login-label');
+    const loginInput = document.getElementById('login-input');
+    const loginHelp = document.getElementById('login-help');
+    
+    if (type === 'elderly') {
+        loginLabel.textContent = 'NRIC';
+        loginInput.placeholder = 'Enter your NRIC (e.g., T1234567H)';
+        loginHelp.textContent = 'Enter your NRIC for community member login';
+    } else {
+        loginLabel.textContent = 'Email';
+        loginInput.placeholder = 'Enter your email address';
+        loginHelp.textContent = 'Enter your email for organizer/volunteer login';
+    }
+    
+    // Show login fields
+    document.getElementById('login-fields').style.display = 'block';
+    document.getElementById('password-field').style.display = 'block';
+    document.getElementById('submit-button').style.display = 'block';
+}
+</script>
 {% endblock %}
