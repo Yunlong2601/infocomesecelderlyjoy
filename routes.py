@@ -945,12 +945,20 @@ def security_questions():
         if not current_user.check_password(form.password_confirm.data):
             flash('Incorrect password. Please try again.', 'danger')
         else:
+            from werkzeug.security import generate_password_hash
+            
             current_user.security_q1 = form.security_q1.data
-            current_user.security_a1 = form.security_a1.data
+            # Hash the security answers for secure storage
+            if form.security_a1.data:
+                current_user.security_a1 = generate_password_hash(form.security_a1.data)
+            
             current_user.security_q2 = form.security_q2.data
-            current_user.security_a2 = form.security_a2.data
+            if form.security_a2.data:
+                current_user.security_a2 = generate_password_hash(form.security_a2.data)
+            
             current_user.security_q3 = form.security_q3.data
-            current_user.security_a3 = form.security_a3.data
+            if form.security_a3.data:
+                current_user.security_a3 = generate_password_hash(form.security_a3.data)
 
             db.session.commit()
             flash('Security questions updated successfully!', 'success')
