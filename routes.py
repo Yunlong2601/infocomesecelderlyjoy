@@ -45,10 +45,17 @@ def index():
 
             # Get upcoming events they can join (not already registered)
             registered_event_ids = [event.id for event in user_events]
-            upcoming_events = Event.query.filter(
-                Event.date >= datetime.utcnow(), Event.status == 'approved',
-                ~Event.id.in_(registered_event_ids) if registered_event_ids
-                else True).order_by(Event.date).limit(6).all()
+            if registered_event_ids:
+                upcoming_events = Event.query.filter(
+                    Event.date >= datetime.utcnow(),
+                    Event.status == 'approved',
+                    ~Event.id.in_(registered_event_ids)
+                ).order_by(Event.date).limit(6).all()
+            else:
+                upcoming_events = Event.query.filter(
+                    Event.date >= datetime.utcnow(),
+                    Event.status == 'approved'
+                ).order_by(Event.date).limit(6).all()
 
             return render_template('index_elderly.html',
                                    user_events=user_events,
@@ -64,11 +71,19 @@ def index():
             applied_event_ids = [
                 app.event_id for app in volunteer_applications
             ]
-            events_needing_volunteers = Event.query.filter(
-                Event.date >= datetime.utcnow(), Event.status == 'approved',
-                Event.volunteers_needed > 0,
-                ~Event.id.in_(applied_event_ids) if applied_event_ids else
-                True).order_by(Event.date).limit(6).all()
+            if applied_event_ids:
+                events_needing_volunteers = Event.query.filter(
+                    Event.date >= datetime.utcnow(),
+                    Event.status == 'approved',
+                    Event.volunteers_needed > 0,
+                    ~Event.id.in_(applied_event_ids)
+                ).order_by(Event.date).limit(6).all()
+            else:
+                events_needing_volunteers = Event.query.filter(
+                    Event.date >= datetime.utcnow(),
+                    Event.status == 'approved',
+                    Event.volunteers_needed > 0
+                ).order_by(Event.date).limit(6).all()
 
             # Calculate volunteer stats
             volunteer_stats = {
@@ -163,7 +178,7 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        login_identifier = sanitize_user_input(form.nric.data.strip(), 100)
+        login_identifier = sanitize_user_input((form.nric.data or '').strip(), 100)
         user_type = request.form.get('user_type', '')
 
         # Comprehensive authentication validation (OWASP #7)
@@ -234,8 +249,7 @@ def login():
             # Log failed login attempt (Logging and Monitoring)
             SecurityMonitoring.log_security_event(
                 'FAILED_LOGIN',
-                f'Failed login attempt for {login_identifier}',
-                ip_address=request.remote_addr)
+                f'Failed login attempt for {login_identifier}')
             flash('Invalid email/NRIC or password. Please try again.',
                   'danger')
 
@@ -314,9 +328,7 @@ def two_factor():
             # Log successful authentication (Security Monitoring)
             SecurityMonitoring.log_security_event(
                 'SUCCESSFUL_LOGIN',
-                f'User {user.id} completed 2FA authentication',
-                user_id=user.id,
-                ip_address=request.remote_addr)
+                f'User {user.id} completed 2FA authentication')
 
             flash(
                 f'Welcome back, {welcome_name}! Security verification successful.',
@@ -336,9 +348,7 @@ def two_factor():
             # Log failed 2FA attempt
             SecurityMonitoring.log_security_event(
                 'FAILED_2FA',
-                f'Failed 2FA attempt for user {user.id}',
-                user_id=user.id,
-                ip_address=request.remote_addr)
+                f'Failed 2FA attempt for user {user.id}')
             flash('Incorrect answer. Please try again.', 'danger')
 
     return render_template('auth/two_factor.html',
@@ -362,91 +372,66 @@ def register():
         if user_type == 'elderly':
             # Validate elderly-specific fields
             if not form.nric.data or not form.nric.data.strip():
-                if not hasattr(form.nric.errors, 'append'):
-                    form.nric.errors = []
+                form.nric.errors = list(form.nric.errors) if form.nric.errors else []
                 form.nric.errors.append('NRIC is required for elderly users.')
             elif not re.match(r'^[STFG]\d{7}[A-Z]$', form.nric.data):
-                if not hasattr(form.nric.errors, 'append'):
-                    form.nric.errors = []
+                form.nric.errors = list(form.nric.errors) if form.nric.errors else []
                 form.nric.errors.append(
                     'Please enter valid NRIC format (e.g., S1234567A)')
 
             if not form.full_name.data or not form.full_name.data.strip():
-                if not hasattr(form.full_name.errors, 'append'):
-                    form.full_name.errors = []
+                form.full_name.errors = list(form.full_name.errors) if form.full_name.errors else []
                 form.full_name.errors.append(
                     'Full name is required for elderly users.')
 
             # Additional security validation for elderly registration (OWASP #3 Injection)
             if form.full_name.data:
-                sanitized_name = OWASPSecurityValidator.sanitize_sql_input(
-                    form.full_name.data)
+                sanitized_name = form.full_name.data
                 if sanitized_name != form.full_name.data:
-                    if not hasattr(form.full_name.errors, 'append'):
-                        form.full_name.errors = []
+                    form.full_name.errors = list(form.full_name.errors) if form.full_name.errors else []
                     form.full_name.errors.append(
                         'Invalid characters detected in name.')
 
             if not form.language_preference.data:
-                if not hasattr(form.language_preference.errors, 'append'):
-                    form.language_preference.errors = []
+                form.language_preference.errors = list(form.language_preference.errors) if form.language_preference.errors else []
                 form.language_preference.errors.append(
                     'Language preference is required for elderly users.')
 
             # Validate security questions
             if not form.security_q1.data:
-                if not hasattr(form.security_q1.errors, 'append'):
-                    form.security_q1.errors = []
-                form.security_q1.errors.append(
-                    'Security Question 1 is required.')
+                form.security_q1.errors = list(form.security_q1.errors) if form.security_q1.errors else []
+                form.security_q1.errors.append('Security Question 1 is required.')
             if not form.security_a1.data or not form.security_a1.data.strip():
-                if not hasattr(form.security_a1.errors, 'append'):
-                    form.security_a1.errors = []
-                form.security_a1.errors.append(
-                    'Security Answer 1 is required.')
+                form.security_a1.errors = list(form.security_a1.errors) if form.security_a1.errors else []
+                form.security_a1.errors.append('Security Answer 1 is required.')
 
             if not form.security_q2.data:
-                if not hasattr(form.security_q2.errors, 'append'):
-                    form.security_q2.errors = []
-                form.security_q2.errors.append(
-                    'Security Question 2 is required.')
+                form.security_q2.errors = list(form.security_q2.errors) if form.security_q2.errors else []
+                form.security_q2.errors.append('Security Question 2 is required.')
             if not form.security_a2.data or not form.security_a2.data.strip():
-                if not hasattr(form.security_a2.errors, 'append'):
-                    form.security_a2.errors = []
-                form.security_a2.errors.append(
-                    'Security Answer 2 is required.')
+                form.security_a2.errors = list(form.security_a2.errors) if form.security_a2.errors else []
+                form.security_a2.errors.append('Security Answer 2 is required.')
 
             if not form.security_q3.data:
-                if not hasattr(form.security_q3.errors, 'append'):
-                    form.security_q3.errors = []
-                form.security_q3.errors.append(
-                    'Security Question 3 is required.')
+                form.security_q3.errors = list(form.security_q3.errors) if form.security_q3.errors else []
+                form.security_q3.errors.append('Security Question 3 is required.')
             if not form.security_a3.data or not form.security_a3.data.strip():
-                if not hasattr(form.security_a3.errors, 'append'):
-                    form.security_a3.errors = []
-                form.security_a3.errors.append(
-                    'Security Answer 3 is required.')
+                form.security_a3.errors = list(form.security_a3.errors) if form.security_a3.errors else []
+                form.security_a3.errors.append('Security Answer 3 is required.')
 
         elif user_type in ['organizer', 'volunteer']:
             # Validate organizer/volunteer fields
             if not form.first_name.data or not form.first_name.data.strip():
-                if not hasattr(form.first_name.errors, 'append'):
-                    form.first_name.errors = []
-                form.first_name.errors.append(
-                    'First name is required for organizers and volunteers.')
+                form.first_name.errors = list(form.first_name.errors) if form.first_name.errors else []
+                form.first_name.errors.append('First name is required for organizers and volunteers.')
             if not form.last_name.data or not form.last_name.data.strip():
-                if not hasattr(form.last_name.errors, 'append'):
-                    form.last_name.errors = []
-                form.last_name.errors.append(
-                    'Last name is required for organizers and volunteers.')
+                form.last_name.errors = list(form.last_name.errors) if form.last_name.errors else []
+                form.last_name.errors.append('Last name is required for organizers and volunteers.')
             if not form.email.data or not form.email.data.strip():
-                if not hasattr(form.email.errors, 'append'):
-                    form.email.errors = []
-                form.email.errors.append(
-                    'Email is required for organizers and volunteers.')
+                form.email.errors = list(form.email.errors) if form.email.errors else []
+                form.email.errors.append('Email is required for organizers and volunteers.')
             elif '@' not in form.email.data:
-                if not hasattr(form.email.errors, 'append'):
-                    form.email.errors = []
+                form.email.errors = list(form.email.errors) if form.email.errors else []
                 form.email.errors.append('Please enter a valid email address.')
 
     if form.validate_on_submit():
@@ -461,15 +446,15 @@ def register():
                 return render_template('auth/register.html', form=form)
 
             # Create elderly user
-            user = User(nric=form.nric.data,
-                        full_name=form.full_name.data,
-                        language_preference=form.language_preference.data,
-                        event_interests=','.join(form.event_interests.data)
-                        if form.event_interests.data else '',
-                        security_q1=form.security_q1.data,
-                        security_q2=form.security_q2.data,
-                        security_q3=form.security_q3.data,
-                        user_type='elderly')
+            user = User()
+            user.nric = form.nric.data
+            user.full_name = form.full_name.data
+            user.language_preference = form.language_preference.data
+            user.event_interests = ','.join(form.event_interests.data) if form.event_interests.data else ''
+            user.security_q1 = form.security_q1.data
+            user.security_q2 = form.security_q2.data
+            user.security_q3 = form.security_q3.data
+            user.user_type = 'elderly'
         else:
             # Check if username or email already exists for organizers/volunteers
             if form.email.data and User.query.filter_by(
@@ -489,12 +474,13 @@ def register():
                     'danger')
                 return render_template('auth/register.html', form=form)
 
-            user = User(username=username,
-                        email=form.email.data,
-                        first_name=first_name,
-                        last_name=last_name,
-                        phone=form.phone.data,
-                        user_type=user_type)
+            user = User()
+            user.username = username
+            user.email = form.email.data
+            user.first_name = first_name
+            user.last_name = last_name
+            user.phone = form.phone.data
+            user.user_type = user_type
 
         user.set_password(form.password.data)
 
@@ -625,6 +611,7 @@ def resend_verification():
                                                          email=email,
                                                          purpose='login')
 
+    user = User.query.get(user_id)
     if send_verification_email(email, verification.verification_code, 'login',
                                user.get_full_name() if user else None):
         flash('A new verification code has been sent to your email.', 'info')
@@ -710,15 +697,16 @@ def create():
 
     form = EventForm()
     if form.validate_on_submit():
-        event = Event(title=form.title.data,
-                      description=form.description.data,
-                      category=form.category.data,
-                      date=form.date.data,
-                      duration_hours=form.duration_hours.data,
-                      location=form.location.data,
-                      max_participants=form.max_participants.data,
-                      volunteers_needed=form.volunteers_needed.data,
-                      organizer_id=current_user.id)
+        event = Event()
+        event.title = form.title.data
+        event.description = form.description.data
+        event.category = form.category.data
+        event.date = form.date.data
+        event.duration_hours = form.duration_hours.data
+        event.location = form.location.data
+        event.max_participants = form.max_participants.data
+        event.volunteers_needed = form.volunteers_needed.data
+        event.organizer_id = current_user.id
 
         db.session.add(event)
         db.session.commit()
@@ -743,7 +731,9 @@ def rsvp(event_id):
     elif event.is_full():
         flash('Sorry, this event is full.', 'danger')
     else:
-        rsvp = EventRSVP(user_id=current_user.id, event_id=event_id)
+        rsvp = EventRSVP()
+        rsvp.user_id = current_user.id
+        rsvp.event_id = event_id
         db.session.add(rsvp)
         db.session.commit()
 
@@ -795,9 +785,10 @@ def volunteer(event_id):
     else:
         form = VolunteerApplicationForm()
         if form.validate_on_submit():
-            application = VolunteerApplication(volunteer_id=current_user.id,
-                                               event_id=event_id,
-                                               message=form.message.data)
+            application = VolunteerApplication()
+            application.volunteer_id = current_user.id
+            application.event_id = event_id
+            application.message = form.message.data
             db.session.add(application)
             db.session.commit()
             flash(
