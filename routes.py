@@ -955,7 +955,7 @@ def verify_security_access():
     if current_user.user_type != 'elderly':
         flash('Security verification is only available for elderly users.',
               'warning')
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('main.main_profile'))
 
     # Get available security questions for verification
     questions = []

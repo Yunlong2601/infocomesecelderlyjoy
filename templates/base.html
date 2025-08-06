@@ -64,7 +64,7 @@
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" style="z-index: 100010 !important; position: absolute !important;">
-                            <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                            <li><a class="dropdown-item" href="{{ url_for('main.main_profile') }}">
                                 <i class="fas fa-user-circle me-1"></i>My Profile
                             </a></li>
                             {% if current_user.user_type in ['elderly', 'volunteer'] %}

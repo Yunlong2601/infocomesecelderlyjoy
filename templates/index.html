@@ -25,7 +25,7 @@
                     <i class="fas fa-calendar me-2"></i>Browse Events
                 </a>
                 {% if current_user.user_type == 'elderly' %}
-                <a href="{{ url_for('main.profile') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
+                <a href="{{ url_for('main.main_profile') }}" class="btn btn-outline-primary btn-lg" style="min-width: 200px;">
                     <i class="fas fa-user-circle me-2"></i>My Profile
                 </a>
                 {% elif current_user.user_type == 'organizer' %}
