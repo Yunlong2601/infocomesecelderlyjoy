@@ -5,7 +5,7 @@ from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
-from encryption_manager import encryption_manager
+from comprehensive_security_system import encryption_manager
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -157,7 +157,6 @@ class User(UserMixin, db.Model):
             
         # If no direct match found, try decrypting encrypted values
         try:
-            from encryption_manager import encryption_manager
             elderly_users = cls.query.filter_by(user_type='elderly').all()
             for user in elderly_users:
                 if user.nric and len(user.nric) > 20:  # Likely encrypted
