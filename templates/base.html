@@ -35,8 +35,11 @@
                     </li>
                     {% if current_user.is_authenticated and current_user.user_type in ['elderly', 'volunteer'] %}
                     <li class="nav-item">
-                        <a class="nav-link fs-5" href="{{ url_for('main.rewards') }}">
+                        <a class="nav-link fs-5 position-relative" href="{{ url_for('main.rewards') }}">
                             <i class="fas fa-gift me-1"></i>Rewards
+                            <span class="badge bg-primary ms-2 position-relative">
+                                <i class="fas fa-coins me-1"></i>{{ current_user.reward_points or 0 }}
+                            </span>
                         </a>
                     </li>
                     {% endif %}
