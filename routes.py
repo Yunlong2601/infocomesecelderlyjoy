@@ -1902,14 +1902,12 @@ def redeem_voucher():
                 'success')
 
             # Log the redemption for security monitoring
-            log_security_event('VOUCHER_REDEEMED',
-                               user_id=current_user.id,
-                               details={
-                                   'voucher_id': voucher_id,
-                                   'points_spent': redemption.points_spent,
-                                   'redemption_code':
-                                   redemption.redemption_code
-                               })
+            log_security_event('VOUCHER_REDEEMED', {
+                'user_id': current_user.id,
+                'voucher_id': voucher_id,
+                'points_spent': redemption.points_spent,
+                'redemption_code': redemption.redemption_code
+            })
         else:
             flash(message, 'error')
 
@@ -1945,14 +1943,13 @@ def award_event_points(user_id, event_id, participation_type='attendance'):
 
         if success:
             # Log the point award
-            log_security_event('POINTS_AWARDED',
-                               user_id=user_id,
-                               details={
-                                   'event_id': event_id,
-                                   'participation_type': participation_type,
-                                   'points_awarded': points,
-                                   'total_points': user.reward_points
-                               })
+            log_security_event('POINTS_AWARDED', {
+                'user_id': user_id,
+                'event_id': event_id,
+                'participation_type': participation_type,
+                'points_awarded': points,
+                'total_points': user.reward_points
+            })
 
         return success
 
