@@ -66,11 +66,11 @@ class RBACSecurityMiddleware:
                 r'/proc/self/environ'
             ],
             'privilege_escalation': [
-                r'admin',
-                r'root',
-                r'superuser',
-                r'privilege',
-                r'escalate'
+                r'\badmin\s+(injection|bypass|hack)',
+                r'root\s+(access|privilege)',
+                r'superuser\s+(elevation|bypass)',
+                r'privilege\s+(escalation|elevation)',
+                r'escalate\s+(privilege|access)'
             ]
         }
     
@@ -92,11 +92,12 @@ class RBACSecurityMiddleware:
                 middleware_logger.warning(f"RATE_LIMIT_EXCEEDED: {client_ip} exceeded rate limit")
                 abort(429)
             
-            # Malicious pattern detection
-            threats_detected = self._detect_malicious_patterns()
-            if threats_detected:
-                self._handle_security_threat(threats_detected, client_ip)
-                abort(403)
+            # Malicious pattern detection (skip for login endpoints)
+            if not request.path.startswith('/auth/'):
+                threats_detected = self._detect_malicious_patterns()
+                if threats_detected:
+                    self._handle_security_threat(threats_detected, client_ip)
+                    abort(403)
             
             # RBAC validation for protected routes
             if self._is_protected_route(request.path):
