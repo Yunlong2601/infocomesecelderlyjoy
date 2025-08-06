@@ -18,11 +18,6 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary btn-lg w-100'})
 
-class AdminLoginForm(FlaskForm):
-    username = StringField('Admin Username', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg', 'placeholder': 'Enter admin username'})
-    password = PasswordField('Password', validators=[DataRequired()], render_kw={'class': 'form-control form-control-lg'})
-    submit = SubmitField('Admin Login', render_kw={'class': 'btn btn-danger btn-lg w-100'})
-
 class MultiCheckboxField(SelectMultipleField):
     widget = ListWidget(prefix_label=False)
     option_widget = CheckboxInput()
