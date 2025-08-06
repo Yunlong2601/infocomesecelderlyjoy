@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Community Connect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fs-3" href="/">
+                <i class="fas fa-heart text-danger me-2"></i>
+                Community Connect
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fs-5" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fs-5" href="/events/">
+                            <i class="fas fa-calendar me-1"></i>Events
+                        </a>
+                    </li>
+                    
+                    
+                </ul>
+                
+                <ul class="navbar-nav">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link fs-5" href="/auth/login">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fs-5" href="/auth/register">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main style="min-height: calc(100vh - 200px);">
+        
+            
+        
+
+        
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-sign-in-alt fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title">Welcome Back</h2>
+                    <p class="text-muted fs-5">Sign in to your account</p>
+                </div>
+
+                <form method="POST">
+                    <input id="csrf_token" name="csrf_token" type="hidden" value="ImNkZjUwMTZhN2M1Y2ZlMzdmYjQwNWQwN2ZiYjdlMzJmMGNmOWZiMjki.aJN0jQ.dqo9Q_jyg3-YTQ6PPIVnGkZRRPk">
+                    
+                    <!-- User Type Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fs-5">I am a:</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card border-primary user-type-card" style="cursor: pointer;" onclick="selectUserType('elderly')">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-heart fa-2x text-primary mb-2"></i>
+                                        <h6>Elderly</h6>
+                                        <small class="text-muted">Login with NRIC</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-success user-type-card" style="cursor: pointer;" onclick="selectUserType('other')">
+                                    <div class="card-body text-center p-3">
+                                        <i class="fas fa-hands-helping fa-2x text-success mb-2"></i>
+                                        <h6 class="mb-1">Organizer &<br>Volunteer</h6>
+                                        <small class="text-muted">Login with email</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="user_type" id="user_type" value="">
+                    </div>
+                    
+                    <div class="mb-3" id="login-fields" style="display: none;">
+                        <label class="form-label fs-5" id="login-label">NRIC/Email</label>
+                        <input class="form-control form-control-lg" id="login-input" name="nric" placeholder="Enter your NRIC or email" required type="text" value="">
+                        <small class="form-text text-muted" id="login-help">Enter your NRIC or email</small>
+                        
+                    </div>
+
+                    <div class="mb-4" id="password-field" style="display: none;">
+                        <label class="form-label fs-5" for="password">Password</label>
+                        <input class="form-control form-control-lg" id="password" name="password" required type="password" value="">
+                        
+                    </div>
+
+                    <div class="d-grid mb-3" id="submit-button" style="display: none;">
+                        <input class="btn btn-primary btn-lg" id="submit" name="submit" type="submit" value="Sign In">
+                    </div>
+                </form>
+
+                <div class="text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>All users can now login with either email or NRIC!</strong><br>
+                        <small>Elderly users: Use NRIC + security questions | Organizers/Volunteers: Use email + email verification</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <p class="fs-5">Don't have an account?</p>
+                    <a href="/auth/register" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-user-plus me-1"></i>Register Here
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectUserType(type) {
+    // Remove active class from all cards
+    document.querySelectorAll('.user-type-card').forEach(card => {
+        card.classList.remove('border-primary', 'border-success', 'bg-light');
+        if (card.querySelector('.fa-heart')) {
+            card.classList.add('border-primary');
+        } else {
+            card.classList.add('border-success');
+        }
+    });
+    
+    // Add active class to selected card
+    const selectedCard = event.target.closest('.user-type-card');
+    selectedCard.classList.remove('border-primary', 'border-success');
+    if (type === 'elderly') {
+        selectedCard.classList.add('border-primary', 'bg-light');
+    } else {
+        selectedCard.classList.add('border-success', 'bg-light');
+    }
+    
+    // Set user type
+    document.getElementById('user_type').value = type;
+    
+    // Update form fields based on selection
+    const loginLabel = document.getElementById('login-label');
+    const loginInput = document.getElementById('login-input');
+    const loginHelp = document.getElementById('login-help');
+    
+    if (type === 'elderly') {
+        loginLabel.textContent = 'NRIC';
+        loginInput.placeholder = 'Enter your NRIC (e.g., T1234567H)';
+        loginHelp.textContent = 'Enter your NRIC for elderly login';
+    } else {
+        loginLabel.textContent = 'Email';
+        loginInput.placeholder = 'Enter your email address';
+        loginHelp.textContent = 'Enter your email for organizer/volunteer login';
+    }
+    
+    // Show login fields
+    document.getElementById('login-fields').style.display = 'block';
+    document.getElementById('password-field').style.display = 'block';
+    document.getElementById('submit-button').style.display = 'block';
+}
+</script>
+
+    </main>
+
+    <footer class="mt-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem 0;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3" style="color: white;">
+                        <i class="fas fa-heart text-light me-2"></i>Community Connect
+                    </h5>
+                    <p class="mb-3" style="color: rgba(255,255,255,0.9);">
+                        Bringing people together through meaningful events and volunteer opportunities.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-light" style="font-size: 1.5rem; transition: transform 0.3s ease;">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-light" style="font-size: 1.5rem; transition: transform 0.3s ease;">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-light" style="font-size: 1.5rem; transition: transform 0.3s ease;">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div style="color: rgba(255,255,255,0.9);">
+                        <p class="mb-2">
+                            <i class="fas fa-phone me-2"></i>For support: (555) 123-4567
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-envelope me-2"></i>help@communityconnect.org
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.3); margin: 2rem 0 1rem;">
+            <div class="text-center" style="color: rgba(255,255,255,0.8);">
+                <small>&copy; 2025 Community Connect. Building stronger communities together.</small>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
