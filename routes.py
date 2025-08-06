@@ -274,9 +274,9 @@ def two_factor():
         user_answer = form.security_answer.data
         
         if user and user.check_security_answer(question_number, user_answer):
-            # 2FA successful - log in the user with secure session
+            # 2FA successful - log in the user
             login_user(user)
-            session_manager.initialize_session(user.id)
+            session['user_id'] = user.id
             welcome_name = user.get_full_name()
             
             # Log successful authentication (Security Monitoring)
@@ -520,6 +520,7 @@ def verify_email_login():
             # Log in the user
             user = User.query.get(user_id)
             login_user(user)
+            session['user_id'] = user.id
             
             # Send success notification
             send_login_success_notification(user.email, user.get_full_name())

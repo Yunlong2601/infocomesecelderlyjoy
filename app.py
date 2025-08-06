@@ -88,27 +88,23 @@ login_manager.session_protection = "strong"  # Enhanced session protection
 @app.before_request
 def before_request():
     """Session validation middleware"""
-    from session_manager import session_manager
     from flask import session, request, redirect, url_for, flash
+    from flask_login import current_user
     
     # Skip session validation for static files and auth routes
     if request.endpoint and (
         request.endpoint.startswith('static') or 
-        request.endpoint.startswith('auth.login') or
-        request.endpoint.startswith('auth.register') or
+        request.endpoint.startswith('auth') or
         request.endpoint == 'main.index'
     ):
         return
     
-    # Validate session for authenticated users
-    if 'user_id' in session:
-        is_valid, message = session_manager.validate_session()
-        if not is_valid:
-            flash(f'Session error: {message}', 'warning')
-            return redirect(url_for('auth.login'))
-        
-        # Perform periodic session cleanup
-        session_manager.cleanup_expired_sessions()
+    # Only validate custom session data if user is authenticated via Flask-Login
+    if current_user.is_authenticated and 'user_id' in session:
+        # Basic session validation without interfering with Flask-Login
+        if session.get('user_id') != current_user.id:
+            # Session mismatch - clear custom session data but don't force logout
+            session.pop('user_id', None)
 
 @login_manager.user_loader
 def load_user(user_id):
