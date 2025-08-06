@@ -314,7 +314,7 @@ class RewardVoucher(db.Model):
         """Check if voucher is still available"""
         if not self.is_active:
             return False
-        if self.stock_limit and self.redeemed_count >= self.stock_limit:
+        if self.stock_limit and (self.redeemed_count or 0) >= self.stock_limit:
             return False
         return True
 

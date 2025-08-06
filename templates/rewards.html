@@ -88,7 +88,7 @@
                                 <div class="mb-2">
                                     <small class="text-muted">
                                         <i class="fas fa-box me-1"></i>
-                                        {{ voucher.stock_limit - voucher.redeemed_count }} left
+                                        {{ voucher.stock_limit - (voucher.redeemed_count or 0) }} left
                                     </small>
                                 </div>
                                 {% endif %}
