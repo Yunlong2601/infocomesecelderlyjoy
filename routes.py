@@ -558,6 +558,8 @@ def email_login():
 @auth_bp.route('/verify-email-login', methods=['GET', 'POST'])
 def verify_email_login():
     """Verify email login with 2FA code"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if 'pending_user_id' not in session:
         flash('No pending login found. Please try logging in again.',
               'warning')
@@ -614,6 +616,8 @@ def verify_email_login():
 @auth_bp.route('/resend-verification')
 def resend_verification():
     """Resend verification code for email login"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if 'pending_user_id' not in session:
         flash('No pending login found. Please try logging in again.',
               'warning')
@@ -742,6 +746,8 @@ def create():
 @login_required
 @require_user_type('elderly', 'volunteer')
 def rsvp(event_id):
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     event = Event.query.get_or_404(event_id)
 
     existing_rsvp = EventRSVP.query.filter_by(user_id=current_user.id,
@@ -773,6 +779,8 @@ def rsvp(event_id):
 @login_required
 @require_user_type('elderly', 'volunteer')
 def cancel_rsvp(event_id):
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     rsvp = EventRSVP.query.filter_by(user_id=current_user.id,
                                      event_id=event_id).first()
 
@@ -795,6 +803,7 @@ def cancel_rsvp(event_id):
 @login_required
 @require_volunteer
 def volunteer(event_id):
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
 
     event = Event.query.get_or_404(event_id)
     existing_application = VolunteerApplication.query.filter_by(
@@ -1067,6 +1076,7 @@ def delete_picture():
 @require_organizer
 def dashboard():
     """Organizer dashboard with event management"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
 
     # Get organizer's events with different statuses
     pending_events = Event.query.filter_by(organizer_id=current_user.id,
@@ -1308,6 +1318,7 @@ def delete_picture():
 @require_volunteer
 def dashboard():
     """Volunteer dashboard"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
 
     # Get volunteer's applications and statistics
     applications = VolunteerApplication.query.filter_by(
@@ -1340,6 +1351,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @require_admin
 def dashboard():
     """Admin dashboard with database management"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
 
     # Get database statistics
     total_users = User.query.count()
@@ -1818,6 +1830,8 @@ def terminate_account(user_id):
 @login_required
 def rewards():
     """Display available vouchers and user's redeemed vouchers"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     # Debug logging
     current_app.logger.info(
         f"Rewards access attempt - User authenticated: {current_user.is_authenticated}, User ID: {current_user.id if current_user.is_authenticated else 'None'}, User type: {current_user.user_type if current_user.is_authenticated else 'None'}"
@@ -1860,6 +1874,8 @@ def rewards():
 @login_required
 def redeem_voucher():
     """Redeem a voucher with user's points"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     # Check if user has access to rewards
     if not current_user.is_authenticated or current_user.user_type not in [
             'elderly', 'volunteer'
