@@ -13,8 +13,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from enhanced_security_complete import initialize_complete_security
-from rbac_middleware import rbac_middleware
+from unified_security_system import initialize_complete_security, UnifiedSecurityMiddleware
 
 # Configure enhanced security logging
 logging.basicConfig(
@@ -90,8 +89,8 @@ login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 login_manager.session_protection = "strong"  # Enhanced session protection
 
-# Initialize RBAC security middleware
-rbac_middleware.init_app(app)
+# Initialize unified security system
+app = initialize_complete_security(app)
 
 # Session management middleware
 @app.before_request
@@ -173,12 +172,7 @@ with app.app_context():
     import models  # noqa: F401
     db.create_all()
 
-# Initialize complete security system
-try:
-    app = initialize_complete_security(app)
-except Exception as e:
-    logging.warning(f"Enhanced security initialization failed: {e}")
-    # Continue with basic security
+# Security system already initialized above
 
 # Import and register routes
 from routes import main_bp, auth_bp, events_bp, profile_bp, organizer_bp, volunteer_bp, admin_bp
