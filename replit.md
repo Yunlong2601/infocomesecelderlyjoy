@@ -5,11 +5,14 @@ Community Connect is a Flask-based web application designed to foster community 
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Accessibility requirement: Double-check prompts before important actions to support users with learning or cognitive needs.
 
 ## System Architecture
 
 ### UI/UX Decisions
 The application features an elderly-friendly light theme designed for enhanced readability, utilizing high-contrast colors, larger fonts, white backgrounds with dark text, and improved button sizing and spacing. The design emphasizes accessibility, with a mobile-first approach and large, accessible UI elements. Jinja2 templates with Bootstrap 5 are used, along with Font Awesome for consistent iconography.
+
+**Accessibility Features**: Comprehensive double-check confirmation prompts are implemented for all important actions (voucher redemption, account termination, profile picture deletion, event deletion) with clear explanations of consequences and "cannot be undone" warnings to support users with learning or cognitive needs.
 
 ### Technical Implementations
 The backend is built with Flask and SQLAlchemy ORM, using PostgreSQL for the production database. Authentication is managed via Flask-Login, and forms are handled by Flask-WTF with WTForms for robust validation. 
