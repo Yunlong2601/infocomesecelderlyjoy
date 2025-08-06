@@ -10,17 +10,23 @@ from flask_wtf.csrf import validate_csrf, CSRFError
 from app import db
 from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
-from comprehensive_security_system import (
-    log_security_event, encryption_manager, session_manager, 
-    two_factor_auth, rbac_system, require_user_type, require_admin, 
-    require_organizer, require_volunteer, require_elderly, 
-    check_resource_ownership, check_event_ownership, check_application_ownership,
-    sanitize_user_input, validate_file_upload, rate_limit_per_endpoint,
-    login_rate_limit, profile_edit_rate_limit, email_send_rate_limit,
-    password_rotation_required, send_verification_email, 
-    send_login_success_notification, send_termination_notification,
-    send_event_review_notification
+from email_utils import send_verification_email, send_login_success_notification, send_termination_notification, send_event_review_notification
+from access_control import (
+    require_user_type, require_admin, require_organizer, require_volunteer, 
+    require_elderly, check_resource_ownership, check_event_ownership, 
+    check_application_ownership, sanitize_user_input, validate_file_upload,
+    log_security_event
 )
+from rate_limiting_enhancement import rate_limit_per_endpoint, login_rate_limit, profile_edit_rate_limit, email_send_rate_limit
+from password_rotation_policy import PasswordRotationPolicy, password_rotation_required
+from security_enhancements import (
+    CryptographicSecurity, SQLInjectionPrevention, AuthenticationSecurity,
+    SSRFPrevention, DataIntegrityValidation, SecurityMonitoring
+)
+from security_validator import OWASPSecurityValidator
+from enhanced_security_complete import SecurityMonitoring as EnhancedSecurityMonitoring
+from session_manager import session_manager
+from encryption_manager import encryption_manager
 
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -140,36 +146,68 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        login_identifier = form.nric.data.strip() if form.nric.data else ""
+        login_identifier = sanitize_user_input(form.nric.data.strip(), 100)
         
-        if not login_identifier:
-            flash('Please enter your login information.', 'danger')
+        # Comprehensive authentication validation (OWASP #7)
+        auth_valid, auth_message = OWASPSecurityValidator.validate_authentication_attempt(
+            login_identifier, request.remote_addr
+        )
+        if not auth_valid:
+            OWASPSecurityValidator.log_security_event(
+                'RATE_LIMIT_EXCEEDED', 
+                f'Login rate limit exceeded for {login_identifier}',
+                severity='WARNING'
+            )
+            flash('Too many login attempts. Please try again in 15 minutes.', 'danger')
             return render_template('auth/login.html', form=form)
         
-        # Find user by email, username, or NRIC
-        user = None
+        # Check if it's an email (contains @) or NRIC/username using secure ORM queries
         if '@' in login_identifier:
-            user = User.query.filter_by(email=login_identifier).first()
+            # Email login - use secure ORM query
+            user = User.safe_query_by_email(login_identifier)
         else:
-            user = User.query.filter_by(username=login_identifier).first()
+            # NRIC/username login - use secure ORM queries
+            user = User.safe_query_by_nric(login_identifier)
             if not user:
-                user = User.query.filter_by(nric=login_identifier).first()
+                user = User.query.filter_by(username=login_identifier).first()
+        
+        # Validate session security (OWASP #2 Cryptographic Failures)
+        session_valid, session_message = OWASPSecurityValidator.validate_session_security()
+        if not session_valid:
+            session.clear()
+            flash('Session expired. Please log in again.', 'warning')
+            return redirect(url_for('auth.login'))
         
         if user and user.check_password(form.password.data):
-            login_user(user, remember=False)
-            flash(f'Welcome back, {user.get_display_name()}!', 'success')
-            
-            # Redirect based on user type
-            if user.user_type == 'admin':
-                return redirect(url_for('admin.dashboard'))
-            elif user.user_type == 'organizer':
-                return redirect(url_for('organizer.dashboard'))
-            elif user.user_type == 'volunteer':
-                return redirect(url_for('volunteer.dashboard'))
+            if user.user_type == 'elderly':
+                # Initialize secure session for elderly users
+                session_manager.initialize_session(user.id)
+                session['pending_user_id'] = user.id
+                return redirect(url_for('auth.two_factor'))
             else:
-                return redirect(url_for('main.index'))
+                # For organizers and volunteers, use email 2FA
+                verification = EmailVerification.create_verification(
+                    user_id=user.id,
+                    email=user.email,
+                    purpose='login'
+                )
+                
+                if send_verification_email(user.email, verification.verification_code, 'login', user.get_full_name()):
+                    session['pending_user_id'] = user.id
+                    session['pending_login_email'] = user.email
+                    session['verification_id'] = verification.id
+                    flash('Please check your email for the verification code.', 'info')
+                    return redirect(url_for('auth.verify_email_login'))
+                else:
+                    flash('Failed to send verification email. Please try again.', 'danger')
         else:
-            flash('Invalid login credentials. Please try again.', 'danger')
+            # Log failed login attempt (Logging and Monitoring)
+            SecurityMonitoring.log_security_event(
+                'FAILED_LOGIN',
+                f'Failed login attempt for {login_identifier}',
+                ip_address=request.remote_addr
+            )
+            flash('Invalid email/NRIC or password. Please try again.', 'danger')
     
     return render_template('auth/login.html', form=form)
 
@@ -582,7 +620,7 @@ def detail(event_id):
 
 @events_bp.route('/create', methods=['GET', 'POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def create():
     
     form = EventForm()
@@ -653,7 +691,7 @@ def cancel_rsvp(event_id):
 
 @events_bp.route('/<int:event_id>/volunteer', methods=['POST'])
 @login_required
-@require_volunteer
+@require_volunteer()
 def volunteer(event_id):
     
     event = Event.query.get_or_404(event_id)
@@ -680,7 +718,7 @@ def volunteer(event_id):
 # Profile Management Routes
 @profile_bp.route('/')
 @login_required
-@require_elderly
+@require_elderly()
 def settings():
     """Main profile settings page"""
     
@@ -688,7 +726,7 @@ def settings():
 
 @profile_bp.route('/edit', methods=['GET', 'POST'])
 @login_required
-@require_elderly
+@require_elderly()
 def edit():
     """Edit basic profile information"""
     
@@ -730,7 +768,7 @@ def edit():
 
 @profile_bp.route('/password', methods=['GET', 'POST'])
 @login_required
-@require_elderly
+@require_elderly()
 def change_password():
     """Change user password"""
     
@@ -749,7 +787,7 @@ def change_password():
 
 @profile_bp.route('/security', methods=['GET', 'POST'])
 @login_required
-@require_elderly
+@require_elderly()
 def security_questions():
     """Update security questions with 2FA verification"""
     
@@ -871,7 +909,7 @@ def verify_security_access():
 
 @profile_bp.route('/delete-picture', methods=['POST'])
 @login_required
-@require_elderly
+@require_elderly()
 def delete_picture():
     """Delete profile picture"""
     
@@ -893,7 +931,7 @@ def delete_picture():
 # Organizer Dashboard Routes
 @organizer_bp.route('/dashboard')
 @login_required
-@require_organizer
+@require_organizer()
 def dashboard():
     """Organizer dashboard with event management"""
     
@@ -917,7 +955,7 @@ def dashboard():
 
 @organizer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def profile():
     """Organizer profile management"""
     
@@ -971,7 +1009,7 @@ def profile():
 
 @organizer_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def change_password():
     """Change organizer password"""
     
@@ -989,7 +1027,7 @@ def change_password():
 
 @organizer_bp.route('/delete-picture', methods=['POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def delete_picture():
     """Delete organizer profile picture"""
     
@@ -1013,7 +1051,7 @@ volunteer_bp = Blueprint('volunteer', __name__, url_prefix='/volunteer')
 
 @volunteer_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
-@require_volunteer
+@require_volunteer()
 def profile():
     """Volunteer profile management"""
     
@@ -1067,7 +1105,7 @@ def profile():
 
 @volunteer_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
-@require_volunteer
+@require_volunteer()
 def change_password():
     """Change volunteer password"""
     
@@ -1085,7 +1123,7 @@ def change_password():
 
 @volunteer_bp.route('/delete-picture', methods=['POST'])
 @login_required
-@require_volunteer
+@require_volunteer()
 def delete_picture():
     """Delete volunteer profile picture"""
     
@@ -1106,7 +1144,7 @@ def delete_picture():
 
 @volunteer_bp.route('/dashboard')
 @login_required
-@require_volunteer
+@require_volunteer()
 def dashboard():
     """Volunteer dashboard"""
     
@@ -1135,7 +1173,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin_bp.route('/dashboard')
 @login_required
-@require_admin
+@require_admin()
 def dashboard():
     """Admin dashboard with database management"""
     
@@ -1179,7 +1217,7 @@ def dashboard():
 
 @admin_bp.route('/users')
 @login_required
-@require_admin
+@require_admin()
 def users():
     """Admin user management"""
     
@@ -1212,7 +1250,7 @@ def users():
 
 @admin_bp.route('/events')
 @login_required
-@require_admin
+@require_admin()
 def events():
     """Admin event management"""
     
@@ -1243,7 +1281,7 @@ def events():
 
 @admin_bp.route('/event/<int:event_id>/review', methods=['GET', 'POST'])
 @login_required
-@require_admin
+@require_admin()
 def review_event(event_id):
     """Review an event with admin remarks"""
     from forms import EventReviewForm
@@ -1283,7 +1321,7 @@ def review_event(event_id):
 
 @admin_bp.route('/event/<int:event_id>/approve', methods=['POST'])
 @login_required
-@require_admin
+@require_admin()
 def approve_event(event_id):
     """Quick approve an event (legacy route)"""
     from datetime import datetime
@@ -1299,7 +1337,7 @@ def approve_event(event_id):
 
 @admin_bp.route('/event/<int:event_id>/reject', methods=['POST'])
 @login_required
-@require_admin
+@require_admin()
 def reject_event(event_id):
     """Quick reject an event (legacy route)"""
     from datetime import datetime
@@ -1315,7 +1353,7 @@ def reject_event(event_id):
 
 @admin_bp.route('/user/<int:user_id>/toggle-status', methods=['POST'])
 @login_required
-@require_admin
+@require_admin()
 def toggle_user_status(user_id):
     """Toggle user active status"""
     
@@ -1334,7 +1372,7 @@ def toggle_user_status(user_id):
 
 @admin_bp.route('/create-admin', methods=['GET', 'POST'])
 @login_required
-@require_admin
+@require_admin()
 def create_admin():
     """Create new admin account"""
     
@@ -1367,7 +1405,7 @@ def create_admin():
 
 @organizer_bp.route('/create-event', methods=['GET', 'POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def create_event():
     """Create a new event"""
     
@@ -1394,7 +1432,7 @@ def create_event():
 
 @organizer_bp.route('/event/<int:event_id>')
 @login_required
-@require_organizer
+@require_organizer()
 def event_detail(event_id):
     """View detailed event information and manage participants/volunteers"""
     event = Event.query.get_or_404(event_id)
@@ -1415,7 +1453,7 @@ def event_detail(event_id):
 
 @organizer_bp.route('/volunteer/<int:app_id>/approve', methods=['POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def approve_volunteer(app_id):
     """Approve a volunteer application"""
     app = VolunteerApplication.query.get_or_404(app_id)
@@ -1436,7 +1474,7 @@ def approve_volunteer(app_id):
 
 @organizer_bp.route('/volunteer/<int:app_id>/reject', methods=['POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def reject_volunteer(app_id):
     """Reject a volunteer application"""
     
@@ -1453,7 +1491,7 @@ def reject_volunteer(app_id):
 
 @organizer_bp.route('/event/<int:event_id>/edit', methods=['GET', 'POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def edit_event(event_id):
     """Edit an existing event"""
     event = Event.query.get_or_404(event_id)
@@ -1478,7 +1516,7 @@ def edit_event(event_id):
 
 @organizer_bp.route('/event/<int:event_id>/delete', methods=['POST'])
 @login_required
-@require_organizer
+@require_organizer()
 def delete_event(event_id):
     """Delete an event"""
     event = Event.query.get_or_404(event_id)
@@ -1498,7 +1536,7 @@ def delete_event(event_id):
 
 @admin_bp.route('/terminate-account/<int:user_id>', methods=['GET', 'POST'])
 @login_required
-@require_admin
+@require_admin()
 def terminate_account(user_id):
     """Terminate a user account with reasons"""
     user = User.query.get_or_404(user_id)
