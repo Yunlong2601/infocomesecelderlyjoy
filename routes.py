@@ -1003,7 +1003,13 @@ def verify_security_access():
         selected_question, correct_answer, question_key = random.choice(
             questions)
         session['verify_question'] = selected_question
-        session['verify_answer'] = correct_answer
+        # Store question number instead of hash for proper verification
+        if question_key == 'security_q1':
+            session['verify_question_num'] = 1
+        elif question_key == 'security_q2':
+            session['verify_question_num'] = 2
+        elif question_key == 'security_q3':
+            session['verify_question_num'] = 3
         session['verify_attempts'] = 0
     else:
         selected_question = session['verify_question']
@@ -1028,20 +1034,18 @@ def verify_security_access():
 
     form = TwoFactorForm()
     if form.validate_on_submit():
-        user_answer = form.security_answer.data.lower().strip(
-        ) if form.security_answer.data else ''
-        correct_answer = session.get(
-            'verify_answer',
-            '').lower().strip() if session.get('verify_answer') else ''
+        user_answer = form.security_answer.data.strip() if form.security_answer.data else ''
+        question_num = session.get('verify_question_num', 1)
         attempts = session.get('verify_attempts', 0) + 1
         session['verify_attempts'] = attempts
 
-        if user_answer == correct_answer:
+        # Use the proper security answer verification method
+        if current_user.check_security_answer(question_num, user_answer):
             # Verification successful
             session['security_verified'] = True
             # Clear verification session data
             session.pop('verify_question', None)
-            session.pop('verify_answer', None)
+            session.pop('verify_question_num', None)
             session.pop('verify_attempts', None)
 
             flash(
@@ -1052,7 +1056,7 @@ def verify_security_access():
             if attempts >= 3:
                 # Too many failed attempts - clear session and redirect
                 session.pop('verify_question', None)
-                session.pop('verify_answer', None)
+                session.pop('verify_question_num', None)
                 session.pop('verify_attempts', None)
                 flash(
                     'Too many incorrect attempts. Please try again later or contact support.',
