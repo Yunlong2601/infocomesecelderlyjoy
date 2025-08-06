@@ -8,7 +8,6 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, CSRFError
 from app import db
-from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
 from email_utils import send_verification_email, send_login_success_notification, send_termination_notification, send_event_review_notification
 from unified_security_system import (
@@ -22,6 +21,11 @@ from unified_security_system import (
     SecurityMonitoring, OWASPSecurityValidator, session_manager,
     encryption_manager)
 
+# Utility function for lazy imports to avoid circular dependency
+def get_models():
+    from models import User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
+    return User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward
+
 # Profile blueprint for user profile management
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 
@@ -34,6 +38,8 @@ organizer_bp = Blueprint('organizer', __name__, url_prefix='/organizer')
 # Main routes
 @main_bp.route('/')
 def index():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.is_authenticated:
         if current_user.user_type == 'elderly':
             # Get elderly user's registered events
@@ -152,6 +158,8 @@ def index():
 @login_required
 def profile():
     """Redirect to appropriate dashboard based on user type"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.user_type == 'elderly':
         # For elderly users, show dashboard with their events
         rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
@@ -173,6 +181,8 @@ def profile():
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
@@ -258,6 +268,8 @@ def login():
 
 @auth_bp.route('/two-factor', methods=['GET', 'POST'])
 def two_factor():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
@@ -359,6 +371,8 @@ def two_factor():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
@@ -504,6 +518,8 @@ def register():
 @auth_bp.route('/email-login', methods=['GET', 'POST'])
 def email_login():
     """Email-based login for organizers and volunteers with 2FA"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
@@ -633,6 +649,8 @@ def logout():
 # Event routes
 @events_bp.route('/')
 def list():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     category = request.args.get('category')
     search = request.args.get('search')
 
@@ -670,6 +688,8 @@ def list():
 
 @events_bp.route('/<int:event_id>')
 def detail(event_id):
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     event = Event.query.get_or_404(event_id)
 
     user_rsvp = None
@@ -694,6 +714,7 @@ def detail(event_id):
 @login_required
 @require_organizer
 def create():
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
 
     form = EventForm()
     if form.validate_on_submit():
