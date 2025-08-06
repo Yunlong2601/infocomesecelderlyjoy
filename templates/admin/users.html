@@ -38,7 +38,7 @@
                         <div class="col-md-6">
                             <label for="search" class="form-label">Search</label>
                             <input type="text" name="search" id="search" class="form-control" 
-                                   placeholder="Search by name, email, or NRIC..." value="{{ search }}">
+                                   placeholder="Search by name or email..." value="{{ search }}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">&nbsp;</label>
@@ -92,7 +92,7 @@
                                                         <strong>{{ user.get_full_name() }}</strong><br>
                                                         <small class="text-muted">
                                                             {% if user.user_type == 'elderly' %}
-                                                                NRIC: {{ user.nric or 'N/A' }}
+                                                                Member ID: {{ user.id }}
                                                             {% else %}
                                                                 {{ user.username or 'N/A' }}
                                                             {% endif %}

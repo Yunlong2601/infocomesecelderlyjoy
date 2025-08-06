@@ -1236,8 +1236,7 @@ def users():
                 User.first_name.contains(search),
                 User.last_name.contains(search),
                 User.full_name.contains(search),
-                User.email.contains(search),
-                User.nric.contains(search)
+                User.email.contains(search)
             )
         )
     
