@@ -8,12 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_mail import Mail
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from unified_security_system import initialize_security_system
+from extensions import db, login_manager, mail
 
 # Configure enhanced security logging
 logging.basicConfig(
@@ -24,13 +22,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
-login_manager = LoginManager()
-mail = Mail()
 
 # Create the app
 app = Flask(__name__)
@@ -80,7 +71,7 @@ app.config['MAIL_USERNAME'] = 'samplebookshopnyp@gmail.com'
 app.config['MAIL_PASSWORD'] = os.environ.get('GMAIL_APP_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = 'samplebookshopnyp@gmail.com'
 
-# Initialize extensions
+# Initialize extensions with app
 db.init_app(app)
 login_manager.init_app(app)
 mail.init_app(app)
@@ -167,12 +158,7 @@ def set_security_headers(response):
     
     return response
 
-with app.app_context():
-    # Import models to ensure tables are created
-    import models  # noqa: F401
-    db.create_all()
-
-# Import and register routes after app context - delayed import to avoid circular dependency
+# Import and register routes after app initialization - delayed import to avoid circular dependency
 def register_blueprints(app):
     from routes import main_bp, auth_bp, events_bp, profile_bp, organizer_bp, volunteer_bp, admin_bp
     app.register_blueprint(main_bp)
@@ -183,9 +169,14 @@ def register_blueprints(app):
     app.register_blueprint(volunteer_bp, url_prefix='/volunteer')
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-# Register blueprints after app context is established
+# Register blueprints first
+register_blueprints(app)
+
+# Then create tables within app context
 with app.app_context():
-    register_blueprints(app)
+    # Import models to ensure tables are created
+    import models  # noqa: F401
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

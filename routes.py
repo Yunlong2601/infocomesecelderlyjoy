@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import validate_csrf, CSRFError
-from app import db
+from extensions import db
 from forms import LoginForm, RegistrationForm, EventForm, VolunteerApplicationForm, TwoFactorForm, ElderlyProfileForm, ChangePasswordForm, SecurityQuestionsForm, EmailLoginForm, EmailVerificationForm, RequestVerificationForm, EditProfileForm, AccountTerminationForm
 from email_utils import send_verification_email, send_login_success_notification, send_termination_notification, send_event_review_notification
 from unified_security_system import (
@@ -1434,7 +1434,8 @@ def dashboard():
 @require_admin
 def users():
     """Admin user management"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     page = request.args.get('page', 1, type=int)
     user_type_filter = request.args.get('type', 'all')
     search = request.args.get('search', '')
@@ -1466,7 +1467,8 @@ def users():
 @require_admin
 def events():
     """Admin event management"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', 'all')
     search = request.args.get('search', '')
@@ -1497,6 +1499,7 @@ def events():
 @require_admin
 def review_event(event_id):
     """Review an event with admin remarks"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
     from forms import EventReviewForm
     from datetime import datetime
 
@@ -1538,6 +1541,7 @@ def review_event(event_id):
 @require_admin
 def approve_event(event_id):
     """Quick approve an event (legacy route)"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
     from datetime import datetime
 
     event = Event.query.get_or_404(event_id)
@@ -1555,6 +1559,7 @@ def approve_event(event_id):
 @require_admin
 def reject_event(event_id):
     """Quick reject an event (legacy route)"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
     from datetime import datetime
 
     event = Event.query.get_or_404(event_id)
@@ -1572,7 +1577,8 @@ def reject_event(event_id):
 @require_admin
 def toggle_user_status(user_id):
     """Toggle user active status"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     user = User.query.get_or_404(user_id)
     if user.user_type == 'admin' and user.id != current_user.id:
         flash('Cannot modify other admin accounts.', 'danger')
@@ -1592,7 +1598,8 @@ def toggle_user_status(user_id):
 @require_admin
 def create_admin():
     """Create new admin account"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     form = EditProfileForm()
 
     if form.validate_on_submit():
@@ -1626,7 +1633,8 @@ def create_admin():
 @require_organizer
 def create_event():
     """Create a new event"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     form = EventForm()
     if form.validate_on_submit():
         event = Event(
@@ -1656,6 +1664,8 @@ def create_event():
 @require_organizer
 def event_detail(event_id):
     """View detailed event information and manage participants/volunteers"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     event = Event.query.get_or_404(event_id)
 
     # Ensure the organizer owns this event (or admin access)
@@ -1679,6 +1689,8 @@ def event_detail(event_id):
 @require_organizer
 def approve_volunteer(app_id):
     """Approve a volunteer application"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     app = VolunteerApplication.query.get_or_404(app_id)
 
     # Verify organizer owns the event
@@ -1705,7 +1717,8 @@ def approve_volunteer(app_id):
 @require_organizer
 def reject_volunteer(app_id):
     """Reject a volunteer application"""
-
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     app = VolunteerApplication.query.get_or_404(app_id)
 
     # Verify organizer owns the event
@@ -1725,6 +1738,8 @@ def reject_volunteer(app_id):
 @require_organizer
 def edit_event(event_id):
     """Edit an existing event"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     event = Event.query.get_or_404(event_id)
 
     # Ensure the organizer owns this event
@@ -1751,6 +1766,8 @@ def edit_event(event_id):
 @require_organizer
 def delete_event(event_id):
     """Delete an event"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     event = Event.query.get_or_404(event_id)
 
     # Ensure the organizer owns this event
@@ -1772,6 +1789,8 @@ def delete_event(event_id):
 @require_admin
 def terminate_account(user_id):
     """Terminate a user account with reasons"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     user = User.query.get_or_404(user_id)
 
     # Prevent admin from terminating their own account
@@ -1955,6 +1974,8 @@ def redeem_voucher():
 
 def award_event_points(user_id, event_id, participation_type='attendance'):
     """Award points to a user for event participation"""
+    User, Event, EventRSVP, VolunteerApplication, EmailVerification, RewardVoucher, UserReward = get_models()
+    
     try:
         user = User.query.get(user_id)
         if not user or user.user_type not in ['elderly', 'volunteer']:

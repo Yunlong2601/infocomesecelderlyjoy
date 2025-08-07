@@ -1,0 +1,86 @@
+"""
+MySQL Installation and Setup Guide for Windows
+Step-by-step instructions to get MySQL running for your Community Connect app
+"""
+
+print("🐬 MySQL Installation Guide for Community Connect")
+print("=" * 60)
+
+print("\n📥 OPTION 1: XAMPP (Easiest - Recommended)")
+print("-" * 50)
+print("1. 📥 Download XAMPP from: https://www.apachefriends.org/download.html")
+print("2. 🚀 Install XAMPP (choose default options)")
+print("3. ✅ Open XAMPP Control Panel")
+print("4. ▶️  Start 'Apache' and 'MySQL' services")
+print("5. 🌐 MySQL will run on localhost:3306")
+print("6. 👤 Default credentials: user=root, password=(empty)")
+print("7. 🎯 Use these settings in the configuration script")
+
+print("\n📥 OPTION 2: MySQL Workbench (Full MySQL Experience)")  
+print("-" * 50)
+print("1. 📥 Download from: https://dev.mysql.com/downloads/workbench/")
+print("2. 🚀 Install MySQL Workbench (includes MySQL Server)")
+print("3. 🔧 During setup, set a root password (remember it!)")
+print("4. ✅ Open MySQL Workbench")
+print("5. 🔗 Create a connection to localhost:3306")
+print("6. 🎯 Use your setup credentials in the configuration script")
+
+print("\n📥 OPTION 3: Standalone MySQL Server")
+print("-" * 50) 
+print("1. 📥 Download from: https://dev.mysql.com/downloads/mysql/")
+print("2. 🚀 Install MySQL Server")
+print("3. 🔧 Set root password during installation")
+print("4. ▶️  Start MySQL service")
+print("5. 🎯 Use localhost:3306 with your credentials")
+
+print("\n📥 OPTION 4: Docker (For Advanced Users)")
+print("-" * 50)
+print("1. 🐳 Install Docker Desktop")
+print("2. 🚀 Run: docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=SYL12345 mysql:latest")
+print("3. ⏱️  Wait for container to start (30-60 seconds)")
+print("4. 🎯 Use localhost:3306, user=root, password=SYL12345")
+
+print("\n🔍 How to Check if MySQL is Running:")
+print("-" * 50)
+print("• Windows Services: Look for 'MySQL' or 'MySQL80' service")
+print("• XAMPP: Check XAMPP Control Panel - MySQL should be green")
+print("• Command line: mysql -u root -p (should prompt for password)")
+print("• Task Manager: Look for mysqld.exe process")
+
+print("\n🚨 Common Issues and Solutions:")
+print("-" * 50)
+print("❌ Port 3306 already in use:")
+print("   • Stop other MySQL instances")
+print("   • Use different port (like 3307)")
+print("   • Restart Windows")
+
+print("\n❌ Access denied errors:")
+print("   • Check username/password")
+print("   • Try empty password for XAMPP")
+print("   • Reset MySQL root password")
+
+print("\n❌ Can't connect errors:")
+print("   • Ensure MySQL service is running")
+print("   • Check Windows Firewall")
+print("   • Use 127.0.0.1 instead of localhost")
+
+print("\n🎯 Once MySQL is Running:")
+print("-" * 50)
+print("1. 🔄 Run the configuration script again:")
+print("   python configure_mysql.py")
+print("2. ✅ Test connection with correct credentials")
+print("3. 🏗️  Create database and tables:")
+print("   python setup_database.py")
+print("4. 🚀 Start your app with MySQL!")
+
+print("\n💡 Quick Test Commands:")
+print("-" * 50)
+print("• Test MySQL service: sc query mysql80")
+print("• Test connection: mysql -h localhost -u root -p")
+print("• Show databases: SHOW DATABASES;")
+print("• Create database: CREATE DATABASE community_connect;")
+
+print("\n" + "=" * 60)
+print("🎉 Choose your preferred option and set up MySQL!")
+print("📞 Need help? Check the MySQL documentation or ask for assistance!")
+print("=" * 60)
