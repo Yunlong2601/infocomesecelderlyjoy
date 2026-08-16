@@ -16,8 +16,8 @@ parts/
 sdist/
 var/
 wheels/
-*.egg-info/
-.installed.cfg
+*.egg-info
+*.installed.cfg
 *.egg
 MANIFEST
 
@@ -63,6 +63,8 @@ app.log
 *.key
 *.pem
 *.crt
+cookies.txt
+*.cookies
 
 # Uploads
 static/uploads/*
